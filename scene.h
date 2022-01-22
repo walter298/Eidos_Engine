@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "global.h"
+#include "player.h"
 
 void ed_enterTextureData(ed_Texture& texture, std::string fileName);
 void ed_enterSceneData(ed_Scene& scene, std::string fileName);

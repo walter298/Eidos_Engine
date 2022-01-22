@@ -305,6 +305,11 @@ void ed_executeScene(ed_Scene scene)
 
 	ed_globalScene.executing = true;
 
+	if (ed_globalScene.containsPlayer) {
+		std::thread playerHorizontalMovementCheck(ed_pMovementInput, 70);
+		playerHorizontalMovementCheck.detach();
+	}
+
 	std::thread buttonCheck(ed_checkButtonInputs);
 
 	buttonCheck.detach();
@@ -341,14 +346,15 @@ void ed_executeScene(ed_Scene scene)
 
 		//render foreground objects
 		for (ed_Texture& texture : ed_globalScene.foregroundObjects) {
-			
 			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL, &texture.ren);
-		}  
+		}
+
+		if (ed_globalScene.containsPlayer) {
+			SDL_RenderCopy(ed_mainRenderer, ed_Player.tex.sheets[ed_Player.tex.sheetIndex][ed_Player.tex.textureIndex], NULL, &ed_Player.tex.ren);
+		}
 
 		SDL_RenderPresent(ed_mainRenderer);
 
-		if ((startingTick / fps) > SDL_GetTicks() - startingTick) {
-			SDL_Delay(startingTick / fps - (SDL_GetTicks() - startingTick));
-		}
+		SDL_Delay(10);
 	}
 }

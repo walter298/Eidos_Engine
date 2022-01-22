@@ -11,8 +11,8 @@ class ed_Texture {
 public:
 	std::vector<std::vector<SDL_Texture*>> sheets; //spritesheet
 
-	SDL_Rect ren; 
-	SDL_Rect world;
+	SDL_Rect ren = { 0, 0, 0, 0 };
+	SDL_Rect world = { 0, 0, 0, 0};
 
 	size_t sheetIndex = 0;
 	size_t textureIndex = 0;
@@ -36,7 +36,10 @@ public:
 
 class ed_Character {
 public:
-	ed_Texture texture;
+	ed_Texture tex;
+
+	int getSheetIndex();
+	int getTextureIndex();
 
 	std::vector<void(*)()> backgroundMethods;
 
@@ -55,9 +58,9 @@ public:
 
 	std::vector<ed_Character> NPCS;
 
-	ed_Character player;
+	bool containsPlayer = true;
 
-	std::vector<void(*)()> backgroundMethods; //methods that run in the background
+	std::vector<void(*)()> backgroundMethods;
 
 	bool executing = false;
 };
