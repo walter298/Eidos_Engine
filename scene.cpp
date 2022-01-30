@@ -41,7 +41,7 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 
 	std::vector<std::vector<std::string>> dataPieces;
 	std::vector<std::string> currentData;
-	
+
 	std::string currentLine;
 
 	while (std::getline(file, currentLine)) {
@@ -69,12 +69,14 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 
 			texture.sheets.push_back(newTextureGroup);
 
-		} else if (group[0] == "RECT") {
+		}
+		else if (group[0] == "RECT") {
 			std::vector<int> rectStats = ed_parseNums(group[1]);
 
 			texture.ren = { rectStats[0], rectStats[1], rectStats[2], rectStats[3] };
 
-		} else if (group[0] == "ID") {
+		}
+		else if (group[0] == "ID") {
 			texture.ID = std::stoi(group[1]);
 		}
 		else {
@@ -119,7 +121,7 @@ void ed_parseButtons(ed_Scene& scene, std::vector<std::string> input)
 }
 
 void ed_parseBackgroundImage(ed_Scene& scene, std::vector<std::string> input)
-{	
+{
 	for (size_t i = 1; i < input.size(); i++) {
 		if (input[i].empty()) {
 			continue;
@@ -142,6 +144,11 @@ void ed_parseBackgroundImage(ed_Scene& scene, std::vector<std::string> input)
 	}
 }
 
+void ed_parseSurface(ed_Scene& scene, std::vector<std::string> input)
+{
+
+}
+
 void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 {
 	std::ifstream file;
@@ -160,7 +167,7 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 	std::vector<std::string> currentData;
 
 	while (std::getline(file, line)) {
-		if (line.empty()) {
+		if (line.empty()) { //ignore lines where nothing is written
 			continue;
 		}
 
@@ -181,21 +188,43 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 
 		if (dataPiece[0] == "BACKGROUND_IMAGES") {
 			ed_parseBackgroundImage(scene, dataPiece);
-		} 
+		}
 		else if (dataPiece[0] == "BUTTONS") {
 			ed_parseButtons(scene, dataPiece);
 		}
 		else if (dataPiece[0] == "TEXTURE_PLACEMENT") {
+			ed_Texture texture = ed_loadedTextures[std::stoi(dataPiece[1])];
+
+			std::vector<int> nums = ed_parseNums(dataPiece[2]);
+
+			texture.ren.x = nums[0];
+			texture.ren.y = nums[1];
+			texture.world.x = nums[0];
+			texture.world.y = nums[1];
+		}
+		else if (dataPiece[0] == "PLAYER_PLACEMENT") {
 			std::vector<int> nums = ed_parseNums(dataPiece[1]);
 
-			ed_Texture texture = ed_loadedTextures[nums[0]];
+			ed_Player.tex.ren.x = nums[0];
+			ed_Player.tex.ren.y = nums[0];
 
-			texture.ren.x = nums[1];
-			texture.ren.y = nums[2];
-			texture.world.x = nums[1];
-			texture.world.y = nums[1];
+			ed_Player.tex.world.x = nums[0];
+			ed_Player.tex.world.y = nums[0];
+		}
+		else if (dataPiece[0] == "FLOOR") {
+			std::cout << "parsing floor\n";
+			SDL_Rect newFloor;
 
-			scene.foregroundObjects.push_back(texture);
+			std::vector<int> lengthPeriod = ed_parseNums(dataPiece[1]);
+
+			std::vector<int> heightPeriod = ed_parseNums(dataPiece[2]);
+
+			newFloor.x = lengthPeriod[0];
+			newFloor.w = lengthPeriod[1];
+
+			newFloor.y = heightPeriod[0];
+
+			scene.surfaces.push_back(newFloor);
 		}
 		else {
 			std::cout << "Error. Unknown object: " << dataPiece[0] << std::endl;
@@ -217,7 +246,7 @@ void ed_checkButtonInputs()
 
 	while (ed_globalScene.executing) {
 		while (SDL_PollEvent(&evt)) {
-			if (evt.type == SDL_MOUSEBUTTONDOWN) {	
+			if (evt.type == SDL_MOUSEBUTTONDOWN) {
 				for (ed_Button& button : ed_globalScene.buttons) {
 					if (button.hovered()) {
 						button.reaction();
@@ -260,7 +289,7 @@ void ed_scaleScene(ed_Scene& scene)
 	for (ed_Texture& t : scene.backgrounds) {
 		t.ren.w = newWindowWidth;
 		t.ren.h = newWindowHeight;
-		
+
 		t.ren.x = scaledRelativePosition(t.ren.x, 1920, newWindowWidth);
 	}
 
@@ -270,7 +299,7 @@ void ed_scaleScene(ed_Scene& scene)
 
 		t.ren.x = scaledRelativePosition(t.ren.x, 1920, newWindowWidth);
 		t.ren.y = scaledRelativePosition(t.ren.y, 1080, newWindowHeight);
-		
+
 		t.ren.w = scaledRelativePosition(t.ren.w, 1920, newWindowWidth);
 		t.ren.h = scaledRelativePosition(t.ren.h, 1080, newWindowHeight);
 
@@ -305,10 +334,17 @@ void ed_executeScene(ed_Scene scene)
 
 	ed_globalScene.executing = true;
 
+	//std::thread playerVerticalCollisionCheck(ed_checkPlayerCollision);
+
 	if (ed_globalScene.containsPlayer) {
-		std::thread playerHorizontalMovementCheck(ed_pMovementInput, 70);
-		playerHorizontalMovementCheck.detach();
+		threads.insert(threads.begin(), std::thread(ed_pMovementInput, 70));
+		threads[0].detach();
+
+		threads.insert(threads.begin(), std::thread(ed_checkPlayerCollision));
+		threads[0].detach();
 	}
+
+	ed_Player.deltaY = 5;
 
 	std::thread buttonCheck(ed_checkButtonInputs);
 

@@ -12,7 +12,7 @@ public:
 	std::vector<std::vector<SDL_Texture*>> sheets; //spritesheet
 
 	SDL_Rect ren = { 0, 0, 0, 0 };
-	SDL_Rect world = { 0, 0, 0, 0};
+	SDL_Rect world = { 0, 0, 0, 0 };
 
 	size_t sheetIndex = 0;
 	size_t textureIndex = 0;
@@ -27,7 +27,7 @@ class ed_Button {
 public:
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
-	bool hovered(); 
+	bool hovered();
 
 	void(*reaction)() = NULL;
 
@@ -38,10 +38,13 @@ class ed_Character {
 public:
 	ed_Texture tex;
 
-	int getSheetIndex();
-	int getTextureIndex();
-
 	std::vector<void(*)()> backgroundMethods;
+
+	SDL_Rect surfaceBelow = { 0, 0, 0, 0 };
+
+	bool falling = false;
+
+	int deltaX = 0, deltaY = 0;
 
 	Uint32 ID = 0;
 };

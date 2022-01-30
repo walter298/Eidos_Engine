@@ -1,5 +1,5 @@
-#ifndef RENDERERING
-#define RENDERERING
+#ifndef RENDERING
+#define RENDERING
 
 #include "SDL.h"
 #include "SDL_image.h"

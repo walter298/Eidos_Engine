@@ -1,4 +1,4 @@
-#include "player.h"
+#include "player_movement.h"
 
 void moveHorizontally(int constMovementInterval, int scanKeyID, int direction, const Uint8* key, Uint32 spriteChangeInterval, int sheetIndex) 
 {
@@ -59,5 +59,3 @@ void ed_pMovementInput(int constMovementInterval)
 		} 
 	}
 }
-
-
