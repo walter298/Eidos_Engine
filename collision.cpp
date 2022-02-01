@@ -1,25 +1,23 @@
 #include "collision.h"
 
-SDL_Rect getNearestFloor(ed_Texture tex)
+ed_Surface getNearestFloor(ed_Texture tex)
 {
-	std::vector<SDL_Rect> surfacesBelow;
+	std::vector<ed_Surface> surfacesBelow;
 
-	for (SDL_Rect rect : ed_globalScene.surfaces) 
+	for (ed_Surface surface : ed_globalScene.surfaces)
 	{
-		if (rect.x < ed_Player.tex.world.x && rect.x + rect.w > ed_Player.tex.world.x) {
-			surfacesBelow.push_back(rect);
+		if (surface.x1 < ed_Player.tex.world.x && surface.x2 > ed_Player.tex.world.x) {
+			surfacesBelow.push_back(surface);
 		}
 	}
 
-	SDL_Rect highestFloor = { 0, 7000, 0, 0 };
+	ed_Surface highestFloor = { 0, 7000, 0, 0 };
 
-	for (SDL_Rect rect : surfacesBelow) {
-		if (rect.y > highestFloor.h) {
-			highestFloor = rect;
+	for (ed_Surface surface : surfacesBelow) {
+		if (surface.y1 < highestFloor.y1) {
+			highestFloor = surface;
 		}
 	}
-
-	//std::cout << highestFloor.x << ", " << highestFloor.x + highestFloor.w << std::endl;
 
 	return highestFloor;
 }
@@ -28,10 +26,12 @@ void ed_updateSurfaceBelowPlayer()
 {
 	while (ed_globalScene.executing) {
 		ed_Player.surfaceBelow = getNearestFloor(ed_Player.tex);
+
+		//std::cout << ed_Player.tex.world.y << std::endl;
 	}
 }
 
-SDL_Rect getNearestWall(ed_Texture tex)
+ed_Surface getNearestWall(ed_Texture tex)
 {
 	return {};
 }
@@ -50,10 +50,10 @@ void ed_checkPlayerCollision()
 
 	while (ed_globalScene.executing) 
 	{
-		while (ed_Player.tex.world.y < ed_Player.surfaceBelow.y) {
-			if (ed_Player.tex.world.y + ed_Player.tex.deltaWorldY > ed_Player.surfaceBelow.y) {
-				ed_Player.tex.world.y = ed_Player.surfaceBelow.y;
-				ed_Player.tex.ren.y = ed_Player.surfaceBelow.y;
+		while (ed_Player.tex.world.y < ed_Player.surfaceBelow.y1) {
+			if (ed_Player.tex.world.y + ed_Player.tex.deltaWorldY > ed_Player.surfaceBelow.y1) {
+				ed_Player.tex.world.y = ed_Player.surfaceBelow.y1;
+				ed_Player.tex.ren.y = ed_Player.surfaceBelow.y1;
 
 				break;
 			}

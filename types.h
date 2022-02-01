@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <thread>
 #include <stdarg.h>
 
 #include "rendering.h"
@@ -34,13 +35,18 @@ public:
 	Uint32 ID = 0;
 };
 
+class ed_Surface {
+public:
+	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+};
+
 class ed_Character {
 public:
 	ed_Texture tex;
 
 	std::vector<void(*)()> backgroundMethods;
 
-	SDL_Rect surfaceBelow = { 0, 0, 0, 0 };
+	ed_Surface surfaceBelow = { 0, 0, 0, 0 };
 
 	bool falling = false;
 
@@ -53,7 +59,7 @@ class ed_Scene {
 public:
 	std::vector<ed_Texture> backgrounds;
 
-	std::vector<SDL_Rect> surfaces;
+	std::vector<ed_Surface> surfaces;
 
 	std::vector<ed_Button> buttons;
 
