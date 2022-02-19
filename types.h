@@ -8,20 +8,28 @@
 
 #include "rendering.h"
 
+class ed_Surface {
+public:
+	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+};
+
 class ed_Texture {
 public:
 	std::vector<std::vector<SDL_Texture*>> sheets; //spritesheet
 
-	SDL_Rect ren = { 0, 0, 0, 0 };
-	SDL_Rect world = { 0, 0, 0, 0 };
+	//corresponds to spritesheet
+	std::vector<std::vector<ed_Surface>> collisionGroups; 
+	std::vector<std::vector<SDL_Rect>> renderGroups;
 
 	size_t sheetIndex = 0;
 	size_t textureIndex = 0;
 
+	size_t deltaTexture = 1;
+
 	int deltaCamX = 0, deltaCamY = 0;
 	int deltaWorldX = 0, deltaWorldY = 0;
 
-	Uint32 ID = 0;
+	int ID = 0;
 };
 
 class ed_Button {
@@ -35,11 +43,6 @@ public:
 	Uint32 ID = 0;
 };
 
-class ed_Surface {
-public:
-	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-};
-
 class ed_Character {
 public:
 	ed_Texture tex;
@@ -50,9 +53,16 @@ public:
 
 	bool falling = false;
 
-	int deltaX = 0, deltaY = 0;
-
 	Uint32 ID = 0;
+};
+
+class ed_Player : public ed_Character {
+public:
+	virtual void jump();
+
+	bool jumping = false;
+
+	int health = 0;
 };
 
 class ed_Scene {

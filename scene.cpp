@@ -34,8 +34,8 @@ void ed_executeScene(ed_Scene scene)
 		threads.insert(threads.begin(), std::thread(ed_pMovementInput, 70));
 		threads[0].detach();
 
-		threads.insert(threads.begin(), std::thread(ed_checkPlayerCollision));
-		threads[0].detach();
+		/*threads.insert(threads.begin(), std::thread(ed_checkPlayerCollision));
+		threads[0].detach();*/
 	}
 
 	if (ed_globalScene.buttons.size() > 0) {
@@ -69,16 +69,19 @@ void ed_executeScene(ed_Scene scene)
 
 		//render backgrounds
 		for (ed_Texture& background : ed_globalScene.backgrounds) {
-			SDL_RenderCopy(ed_mainRenderer, background.sheets[0][0], NULL, &background.ren);
+			SDL_RenderCopy(ed_mainRenderer, background.sheets[0][0], NULL, &background.renderGroups[0][0]);
 		}
 
 		//render foreground objects
 		for (ed_Texture& texture : ed_globalScene.foregroundObjects) {
-			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL, &texture.ren);
+			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL, 
+				&texture.renderGroups[texture.sheetIndex][texture.textureIndex]);
 		}
 
+		//render player
 		if (ed_globalScene.containsPlayer) {
-			SDL_RenderCopy(ed_mainRenderer, ed_Player.tex.sheets[ed_Player.tex.sheetIndex][ed_Player.tex.textureIndex], NULL, &ed_Player.tex.ren);
+			SDL_RenderCopy(ed_mainRenderer, c_Player.tex.sheets[c_Player.tex.sheetIndex][c_Player.tex.textureIndex], NULL,
+				&c_Player.tex.renderGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex]);
 		}
 
 		SDL_RenderPresent(ed_mainRenderer);

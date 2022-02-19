@@ -4,9 +4,14 @@ ed_Surface getNearestFloor(ed_Texture tex)
 {
 	std::vector<ed_Surface> surfacesBelow;
 
+	auto c = &c_Player.tex;
+
 	for (ed_Surface surface : ed_globalScene.surfaces)
 	{
-		if (surface.x1 < ed_Player.tex.world.x && surface.x2 > ed_Player.tex.world.x) {
+		if (surface.x1 < c->collisionGroups[c->sheetIndex][c->textureIndex].x1 && 
+			surface.x2 > c->collisionGroups[c->sheetIndex][c->textureIndex].x2 && 
+			surface.y1 >= c->collisionGroups[c->sheetIndex][c->textureIndex].y2) 
+		{
 			surfacesBelow.push_back(surface);
 		}
 	}
@@ -25,9 +30,7 @@ ed_Surface getNearestFloor(ed_Texture tex)
 void ed_updateSurfaceBelowPlayer()
 {
 	while (ed_globalScene.executing) {
-		ed_Player.surfaceBelow = getNearestFloor(ed_Player.tex);
-
-		//std::cout << ed_Player.tex.world.y << std::endl;
+		c_Player.surfaceBelow = getNearestFloor(c_Player.tex);
 	}
 }
 
@@ -50,18 +53,37 @@ void ed_checkPlayerCollision()
 
 	while (ed_globalScene.executing) 
 	{
-		while (ed_Player.tex.world.y < ed_Player.surfaceBelow.y1) {
-			if (ed_Player.tex.world.y + ed_Player.tex.deltaWorldY > ed_Player.surfaceBelow.y1) {
-				ed_Player.tex.world.y = ed_Player.surfaceBelow.y1;
-				ed_Player.tex.ren.y = ed_Player.surfaceBelow.y1;
+		if (c_Player.jumping) {
+			continue;
+		}
 
-				break;
+		if (c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y2 < c_Player.surfaceBelow.y1) {
+			c_Player.falling = true;
+
+			while (true) {
+				auto c = &c_Player.tex;
+
+				if (c->collisionGroups[c->sheetIndex][c->textureIndex].y2 + c->deltaWorldY >= c_Player.surfaceBelow.y1 
+					&& !c_Player.jumping) 
+				{
+					c->collisionGroups[c->sheetIndex][c->textureIndex].y1 = 
+						c_Player.surfaceBelow.y1 + c->collisionGroups[c->sheetIndex][c->textureIndex].y1;
+					c->collisionGroups[c->sheetIndex][c->textureIndex].y2 = c_Player.surfaceBelow.y1;
+					
+					c->renderGroups[c->sheetIndex][c->textureIndex].y = c_Player.surfaceBelow.y1;
+
+					c_Player.falling = false;
+
+					break;
+				}
+
+				c->collisionGroups[c->sheetIndex][c->textureIndex].y1 += c->deltaWorldY;
+				c->collisionGroups[c->sheetIndex][c->textureIndex].y2 += c->deltaWorldY;
+
+				c->renderGroups[c->sheetIndex][c->textureIndex].y += c->deltaCamY;
+
+				SDL_Delay(5);
 			}
-
-			ed_Player.tex.ren.y += ed_Player.tex.deltaCamY;
-			ed_Player.tex.world.y += ed_Player.tex.deltaWorldY;
-
-			SDL_Delay(5);
 		}
 	}
 }
