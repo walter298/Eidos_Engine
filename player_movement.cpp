@@ -2,6 +2,8 @@
 
 void moveHorizontally(int constMovementInterval, int scanKeyID, int direction, const Uint8* key, Uint32 spriteChangeInterval, int sheetIndex) 
 {
+	c_Player.updateTexture(sheetIndex, 1);
+
 	c_Player.tex.sheetIndex = 1;
 	c_Player.tex.textureIndex = 1;
 
@@ -17,9 +19,14 @@ void moveHorizontally(int constMovementInterval, int scanKeyID, int direction, c
 		if (SDL_GetTicks() >= spriteChangeInterval) {
 			spriteChangeInterval += constMovementInterval;
 
-			if (c_Player.tex.textureIndex == lastSpriteIndex) {
+			if (c_Player.tex.textureIndex == lastSpriteIndex) 
+			{
+				c_Player.updateTexture(c_Player.tex.sheetIndex, 1);
 				c_Player.tex.textureIndex = 1;
-			} else {
+			} else 
+			{
+				c_Player.updateTexture(c_Player.tex.sheetIndex, c_Player.tex.textureIndex + 1);
+
 				c_Player.tex.textureIndex++;
 			}
 		}
@@ -79,6 +86,7 @@ void ed_pMovementInput(int constMovementInterval)
 				}
 			}
 
+			c_Player.updateTexture(c_Player.tex.sheetIndex, 0);
 			c_Player.tex.textureIndex = 0;
 		} 
 	}

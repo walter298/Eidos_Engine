@@ -14,6 +14,25 @@ bool ed_Button::hovered()
 	return false;
 }
 
+void ed_Character::updateTexture(int sheetIndex, int textureIndex)
+{
+	auto *tex = &this->tex;
+
+	//our current render position
+	int CRX = tex->renderGroups[tex->sheetIndex][tex->textureIndex].x;
+	int CRY = tex->renderGroups[tex->sheetIndex][tex->textureIndex].y;
+
+	//set new texture to be at current position
+	tex->renderGroups[sheetIndex][textureIndex].x = CRX;
+	tex->renderGroups[sheetIndex][textureIndex].y = CRY;
+
+	//our current collision position
+	/*int CRX1 = this->tex.collisionGroups[sheetIndex][spriteIndex].x1;
+	int CRY1 = this->tex.collisionGroups[sheetIndex][spriteIndex].y1;
+	int CRX2 = this->tex.collisionGroups[sheetIndex][spriteIndex].x2;
+	int CRY2 = this->tex.collisionGroups[sheetIndex][spriteIndex].y2;*/
+}
+
 void ed_Player::jump() {
 	int jumpTime = SDL_GetTicks() + 100;
 

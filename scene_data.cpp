@@ -37,17 +37,21 @@ void ed_scaleScene(ed_Scene& scene)
 	}
 
 	for (ed_Texture& t : scene.foregroundObjects) {
-		t.renderGroups[t.sheetIndex][t.textureIndex].x = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].x, 1920, newWindowWidth);
-		t.renderGroups[t.sheetIndex][t.textureIndex].y = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].y, 1080, newWindowHeight);
+		for (size_t i = 0; i < t.sheets.size(); i++) {
+			for (size_t j = 0; j < t.sheets[i].size(); j++) {
+				t.renderGroups[i][j].x = scaledRelativePosition(t.renderGroups[i][j].x, 1920, newWindowWidth);
+				t.renderGroups[i][j].y = scaledRelativePosition(t.renderGroups[i][j].y, 1080, newWindowHeight);
 
-		t.renderGroups[t.sheetIndex][t.textureIndex].w = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].w, 1920, newWindowWidth);
-		t.renderGroups[t.sheetIndex][t.textureIndex].h = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].h, 1080, newWindowHeight);
+				t.renderGroups[i][j].w = scaledRelativePosition(t.renderGroups[i][j].w, 1920, newWindowWidth);
+				t.renderGroups[i][j].h = scaledRelativePosition(t.renderGroups[i][j].h, 1080, newWindowHeight);
 
-		t.collisionGroups[t.sheetIndex][t.textureIndex].y1 = scaledRelativePosition(t.collisionGroups[t.sheetIndex][t.textureIndex].y1, 1920, newWindowWidth);
-		t.collisionGroups[t.sheetIndex][t.textureIndex].y2 = scaledRelativePosition(t.collisionGroups[t.sheetIndex][t.textureIndex].y2, 1080, newWindowHeight);
+				t.collisionGroups[i][j].y1 = scaledRelativePosition(t.collisionGroups[i][j].y1, 1920, newWindowWidth);
+				t.collisionGroups[i][j].y2 = scaledRelativePosition(t.collisionGroups[i][j].y2, 1080, newWindowHeight);
 
-		t.collisionGroups[t.sheetIndex][t.textureIndex].x1 = scaledRelativePosition(t.collisionGroups[t.sheetIndex][t.textureIndex].x1, 1920, newWindowWidth);
-		t.collisionGroups[t.sheetIndex][t.textureIndex].x2 = scaledRelativePosition(t.collisionGroups[t.sheetIndex][t.textureIndex].x2, 1080, newWindowHeight);
+				t.collisionGroups[i][j].x1 = scaledRelativePosition(t.collisionGroups[i][j].x1, 1920, newWindowWidth);
+				t.collisionGroups[i][j].x2 = scaledRelativePosition(t.collisionGroups[i][j].x2, 1080, newWindowHeight);
+			}
+		}
 
 		t.deltaCamX = scaledRelativePosition(t.deltaCamX, 1920, newWindowWidth);
 		t.deltaCamY = scaledRelativePosition(t.deltaCamY, 1080, newWindowHeight);
@@ -57,19 +61,23 @@ void ed_scaleScene(ed_Scene& scene)
 	}
 
 	if (scene.containsPlayer) {
-		auto c = &c_Player.tex;
+		auto *c = &c_Player.tex;
 
-		c->renderGroups[c->sheetIndex][c->textureIndex].x = scaledRelativePosition(c->renderGroups[c->sheetIndex][c->textureIndex].x, 1920, newWindowWidth);
-		c->renderGroups[c->sheetIndex][c->textureIndex].y = scaledRelativePosition(c->renderGroups[c->sheetIndex][c->textureIndex].y, 1080, newWindowHeight);
+		for (size_t i = 0; i < c->sheets.size(); i++) {
+			for (size_t j = 0; j < c->sheets[i].size(); j++) {
+				c->renderGroups[i][j].x = scaledRelativePosition(c->renderGroups[i][j].x, 1920, newWindowWidth);
+				c->renderGroups[i][j].y = scaledRelativePosition(c->renderGroups[i][j].y, 1080, newWindowHeight);
 
-		c->renderGroups[c->sheetIndex][c->textureIndex].w = scaledRelativePosition(c->renderGroups[c->sheetIndex][c->textureIndex].w, 1920, newWindowWidth);
-		c->renderGroups[c->sheetIndex][c->textureIndex].h = scaledRelativePosition(c->renderGroups[c->sheetIndex][c->textureIndex].h, 1080, newWindowHeight);
+				c->renderGroups[i][j].w = scaledRelativePosition(c->renderGroups[i][j].w, 1920, newWindowWidth);
+				c->renderGroups[i][j].h = scaledRelativePosition(c->renderGroups[i][j].h, 1080, newWindowHeight);
 
-		c->collisionGroups[c->sheetIndex][c->textureIndex].y1 = scaledRelativePosition(c->collisionGroups[c->sheetIndex][c->textureIndex].y1, 1920, newWindowWidth);
-		c->collisionGroups[c->sheetIndex][c->textureIndex].y2 = scaledRelativePosition(c->collisionGroups[c->sheetIndex][c->textureIndex].y2, 1080, newWindowHeight);
+				c->collisionGroups[i][j].y1 = scaledRelativePosition(c->collisionGroups[i][j].y1, 1920, newWindowWidth);
+				c->collisionGroups[i][j].y2 = scaledRelativePosition(c->collisionGroups[i][j].y2, 1080, newWindowHeight);
 
-		c->collisionGroups[c->sheetIndex][c->textureIndex].x1 = scaledRelativePosition(c->collisionGroups[c->sheetIndex][c->textureIndex].x1, 1920, newWindowWidth);
-		c->collisionGroups[c->sheetIndex][c->textureIndex].x2 = scaledRelativePosition(c->collisionGroups[c->sheetIndex][c->textureIndex].x2, 1080, newWindowHeight);
+				c->collisionGroups[i][j].x1 = scaledRelativePosition(c->collisionGroups[i][j].x1, 1920, newWindowWidth);
+				c->collisionGroups[i][j].x2 = scaledRelativePosition(c->collisionGroups[i][j].x2, 1080, newWindowHeight);
+			}
+		}
 
 		c->deltaCamX = scaledRelativePosition(c->deltaCamX, 1920, newWindowWidth);
 		c->deltaCamY = scaledRelativePosition(c->deltaCamY, 1080, newWindowHeight);
@@ -154,11 +162,6 @@ void ed_parseBackgroundImage(ed_Scene& scene, std::vector<std::string> input)
 	}
 }
 
-void ed_parseSurface(ed_Scene& scene, std::vector<std::string> input)
-{
-
-}
-
 void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 {
 	std::ifstream file;
@@ -219,21 +222,13 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 			texture.collisionGroups[texture.sheetIndex][texture.textureIndex].y1 = nums[1];
 			texture.collisionGroups[texture.sheetIndex][texture.textureIndex].x1 = nums[1] + yRemainder;
 		} else if (dataPiece[0] == "PLAYER_PLACEMENT") {
+			auto c = &c_Player.tex;
+
 			std::vector<int> nums = ed_parseNums(dataPiece[1]);
 
-			c_Player.tex.renderGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x = nums[0];
-			c_Player.tex.renderGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y = nums[1];
+			int cX = nums[0], cY = nums[1]; //our center point
 
-			int xRemainder = c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x2 -
-				c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x1;
-			int yRemainder = c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y2 -
-				c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y1;
-
-			c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x1 = nums[0];
-			c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x2 = nums[0] + xRemainder;
-
-			c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y1 = nums[1];
-			c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x1 = nums[1] + yRemainder;
+		
 		} else if (dataPiece[0] == "FLOOR") {
 			ed_Surface newFloor;
 

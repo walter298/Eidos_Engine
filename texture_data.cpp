@@ -163,8 +163,6 @@ void saveTexture(unsigned int localTextureIndex)
 	std::string width = std::to_string(dimensionRect.w);
 	std::string height = std::to_string(dimensionRect.h);
 
-	std::string centerPoint = std::to_string((collisionRect.x + collisionRect.w) / 2);
-
 	std::string dimensionDataPiece;
 
 	dimensionDataPiece.append(cSheetIndex);
@@ -188,9 +186,9 @@ void saveTexture(unsigned int localTextureIndex)
 	collisionDataPiece.append("_");
 	collisionDataPiece.append(cTextureIndex);
 	collisionDataPiece.append("_");
-	collisionDataPiece.append(centerPoint);
-	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_x);
+	collisionDataPiece.append("_");
+	collisionDataPiece.append(col_x2);
 	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_y);
 	collisionDataPiece.append("_");
@@ -261,21 +259,23 @@ void checkModeChange()
 			std::cout << "saving texture...\n";
 
 			textureFile << "";
-			textureFile << "COLLISION\n\n";
+			textureFile << "COLLISION\n";
 
 			for (std::string s : textureCollisionData) {
 				textureFile << s.c_str() << std::endl;
 			}
 
-			textureFile << "end\n\n";
+			textureFile << "\nend\n";
 
-			textureFile << "DIMENSIONS\n\n";
+			textureFile << "DIMENSIONS\n";
 
 			for (std::string s : textureDimensionData) {
 				textureFile << s.c_str() << std::endl;
 			}
 
-			textureFile << "end\n\n";
+			textureFile << "\nend\n";
+
+			textureFile.close();
 
 			std::cout << "saved successfully\n";
 

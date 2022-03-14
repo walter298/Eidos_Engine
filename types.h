@@ -49,6 +49,8 @@ public:
 
 	std::vector<void(*)()> backgroundMethods;
 
+	void updateTexture(int sheetIndex, int textureIndex);
+
 	ed_Surface surfaceBelow = { 0, 0, 0, 0 };
 
 	bool falling = false;
