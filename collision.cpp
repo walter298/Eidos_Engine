@@ -16,7 +16,8 @@ ed_Surface getNearestFloor(ed_Texture tex)
 		}
 	}
 
-	ed_Surface highestFloor = { 0, 7000, 0, 0 };
+	ed_Surface highestFloor;
+	highestFloor.init(0, 7000, 0, 0, 0, 0);
 
 	for (ed_Surface surface : surfacesBelow) {
 		if (surface.y1 < highestFloor.y1) {
@@ -66,8 +67,9 @@ void ed_checkPlayerCollision()
 				if (c->collisionGroups[c->sheetIndex][c->textureIndex].y2 + c->deltaWorldY >= c_Player.surfaceBelow.y1 
 					&& !c_Player.jumping) 
 				{
+					/*automatically set texture's y position to be on top of floor if we overshoot*/
 					c->collisionGroups[c->sheetIndex][c->textureIndex].y1 = 
-						c_Player.surfaceBelow.y1 + c->collisionGroups[c->sheetIndex][c->textureIndex].y1;
+						c_Player.surfaceBelow.y1 - (c->collisionGroups[c->sheetIndex][c->textureIndex].y2 - c->collisionGroups[c->sheetIndex][c->textureIndex].y1);
 					c->collisionGroups[c->sheetIndex][c->textureIndex].y2 = c_Player.surfaceBelow.y1;
 					
 					c->renderGroups[c->sheetIndex][c->textureIndex].y = c_Player.surfaceBelow.y1;

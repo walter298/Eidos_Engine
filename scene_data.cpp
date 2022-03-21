@@ -76,6 +76,9 @@ void ed_scaleScene(ed_Scene& scene)
 
 				c->collisionGroups[i][j].x1 = scaledRelativePosition(c->collisionGroups[i][j].x1, 1920, newWindowWidth);
 				c->collisionGroups[i][j].x2 = scaledRelativePosition(c->collisionGroups[i][j].x2, 1080, newWindowHeight);
+
+				c->collisionGroups[i][j].centerX = scaledRelativePosition(c->collisionGroups[i][j].centerX, 1920, newWindowHeight);
+				c->collisionGroups[i][j].centerY = scaledRelativePosition(c->collisionGroups[i][j].centerY, 1080, newWindowHeight);
 			}
 		}
 
@@ -226,9 +229,9 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 
 			std::vector<int> nums = ed_parseNums(dataPiece[1]);
 
-			int cX = nums[0], cY = nums[1]; //our center point
+			int x = nums[0], y = nums[1]; //our center point
 
-		
+			c_Player.tex.updateToPosition(0, 0, x, y);
 		} else if (dataPiece[0] == "FLOOR") {
 			ed_Surface newFloor;
 

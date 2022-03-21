@@ -58,9 +58,10 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 			std::vector<SDL_Rect> dimensionBoundaries;
 			std::vector<ed_Surface> collisionBoundaries;
 
-			for (size_t textureIndex = 1; textureIndex < group.size(); textureIndex++) {
-				newTextureGroup.push_back(IMG_LoadTexture(ed_mainRenderer, group[textureIndex].c_str()));
+			for (size_t textureIndex = 1; textureIndex < group.size(); textureIndex++) { 
+				newTextureGroup.push_back(IMG_LoadTexture(ed_mainRenderer, group[textureIndex].c_str())); //load texture image
 
+				//empty initializer values
 				dimensionBoundaries.push_back({});
 				collisionBoundaries.push_back({});
 			}
@@ -74,7 +75,7 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 			for (size_t i = 1; i < group.size(); i++) {
 				std::vector<int> nums = ed_parseNums(group[i]);
 
-				texture.collisionGroups[nums[0]][nums[1]] = { nums[2], nums[3], nums[4], nums[5] };
+				texture.collisionGroups[nums[0]][nums[1]].init(nums[2], nums[3], nums[4], nums[5], nums[6], nums[7]);
 			}
 		} else if (group[0] == "DIMENSIONS") {
 			for (size_t i = 1; i < group.size(); i++) {
@@ -97,7 +98,6 @@ void checkDimensionChange()
 	while (checking) {
 		while (SDL_PollEvent(&evt)) {
 			if (evt.type == SDL_KEYDOWN) {
-
 				if (keyState[SDL_SCANCODE_RIGHT]) {
 					dimensionRect.w += 5;
 				} else if (keyState[SDL_SCANCODE_LEFT]) {
@@ -179,6 +179,8 @@ void saveTexture(unsigned int localTextureIndex)
 	std::string col_y = std::to_string(collisionRect.y);
 	std::string col_x2 = std::to_string(collisionRect.x + collisionRect.w);
 	std::string col_y2 = std::to_string(collisionRect.y + collisionRect.h);
+	std::string centerX = std::to_string((collisionRect.x + collisionRect.w) / 2);
+	std::string centerY = std::to_string((collisionRect.y + collisionRect.h) / 2);
 
 	std::string collisionDataPiece;
 
@@ -193,6 +195,10 @@ void saveTexture(unsigned int localTextureIndex)
 	collisionDataPiece.append(col_y);
 	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_y2);
+	collisionDataPiece.append("_");
+	collisionDataPiece.append(centerX);
+	collisionDataPiece.append("_");
+	collisionDataPiece.append(centerY);
 
 	textureCollisionData.push_back(collisionDataPiece);
 }

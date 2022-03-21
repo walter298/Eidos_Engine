@@ -9,5 +9,4 @@ extern std::vector<ed_Texture> ed_loadedTextures;
 
 extern ed_Player c_Player;
 
-
 #endif

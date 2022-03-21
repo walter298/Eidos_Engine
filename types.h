@@ -8,9 +8,13 @@
 
 #include "rendering.h"
 
-class ed_Surface {
+class ed_Surface : public SDL_Rect {
 public:
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+
+	int centerX = 0, centerY = 0;
+
+	void init(int x1, int y1, int x2, int y2, int cX, int cY);
 };
 
 class ed_Texture {
@@ -20,6 +24,9 @@ public:
 	//corresponds to spritesheet
 	std::vector<std::vector<ed_Surface>> collisionGroups; 
 	std::vector<std::vector<SDL_Rect>> renderGroups;
+
+	void updateToCurrentTexture(int sheetIndex, int textureIndex);
+	void updateToPosition(int sheetIndex, int textureIndex, int x , int y);
 
 	size_t sheetIndex = 0;
 	size_t textureIndex = 0;
@@ -49,9 +56,7 @@ public:
 
 	std::vector<void(*)()> backgroundMethods;
 
-	void updateTexture(int sheetIndex, int textureIndex);
-
-	ed_Surface surfaceBelow = { 0, 0, 0, 0 };
+	ed_Surface surfaceBelow;
 
 	bool falling = false;
 
