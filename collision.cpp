@@ -1,23 +1,21 @@
 #include "collision.h"
 
-ed_Surface getNearestFloor(ed_Texture tex)
+ed_Surface getNearestFloor(ed_RenderObject* obj)
 {
 	std::vector<ed_Surface> surfacesBelow;
 
-	auto c = &c_Player.tex;
-
-	for (ed_Surface surface : ed_globalScene.surfaces)
+	for (const ed_Surface surface : ed_globalScene.surfaces)
 	{
-		if (surface.x1 < c->collisionGroups[c->sheetIndex][c->textureIndex].x1 && 
-			surface.x2 > c->collisionGroups[c->sheetIndex][c->textureIndex].x2 && 
-			surface.y1 >= c->collisionGroups[c->sheetIndex][c->textureIndex].y2) 
+		if (surface.x1 < obj->getCollisionBox().x1 && 
+			surface.x2 > obj->getCollisionBox().x2 && 
+			surface.y1 >= obj->getCollisionBox().y2) 
 		{
 			surfacesBelow.push_back(surface);
-		}
+		} 
 	}
 
 	ed_Surface highestFloor;
-	highestFloor.init(0, 7000, 0, 0, 0, 0);
+	highestFloor = { 0, 7000, 5000, 0, 0, 0 };
 
 	for (ed_Surface surface : surfacesBelow) {
 		if (surface.y1 < highestFloor.y1) {
@@ -30,8 +28,10 @@ ed_Surface getNearestFloor(ed_Texture tex)
 
 void ed_updateSurfaceBelowPlayer()
 {
-	while (ed_globalScene.executing) {
-		c_Player.surfaceBelow = getNearestFloor(c_Player.tex);
+	while (ed_running) {
+		c_Player.surfaceBelow = getNearestFloor(&c_Player);
+
+		SDL_Delay(20);
 	}
 }
 
@@ -42,7 +42,7 @@ ed_Surface getNearestWall(ed_Texture tex)
 
 void updateNearestWall()
 {
-	while (ed_globalScene.executing) {
+	while (ed_running) {
 		
 	}
 }
@@ -51,48 +51,41 @@ void ed_checkPlayerCollision()
 {
 	std::thread updateSurfaceBelow(ed_updateSurfaceBelowPlayer);
 	updateSurfaceBelow.detach();
+	 
+	ed_Surface currentSurface; //used so we are not constantly accessing updating texture
 
-	while (ed_globalScene.executing) 
+	while (ed_running) 
 	{
+		//if we are jumping than we don't check for gravity
 		if (c_Player.jumping) {
 			continue;
 		}
 
-		if (c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].y2 < c_Player.surfaceBelow.y1) {
-			c_Player.falling = true;
+		currentSurface = getNearestFloor(&c_Player);
 
-			while (true) {
-				auto c = &c_Player.tex;
+		//if we already are ground we don't check for gravity
+		if (c_Player.getCollisionBox().y2 == currentSurface.y1) {
+			continue;
+		}
 
-				if (c->collisionGroups[c->sheetIndex][c->textureIndex].y2 + c->deltaWorldY >= c_Player.surfaceBelow.y1 
-					&& !c_Player.jumping) 
-				{
-					/*automatically set texture's y position to be on top of floor if we overshoot*/
-					c->collisionGroups[c->sheetIndex][c->textureIndex].y1 = 
-						c_Player.surfaceBelow.y1 - (c->collisionGroups[c->sheetIndex][c->textureIndex].y2 - c->collisionGroups[c->sheetIndex][c->textureIndex].y1);
-					c->collisionGroups[c->sheetIndex][c->textureIndex].y2 = c_Player.surfaceBelow.y1;
-					
-					c->renderGroups[c->sheetIndex][c->textureIndex].y = c_Player.surfaceBelow.y1;
+		while (true) {
+			if (c_Player.getCollisionBox().y2 >= currentSurface.y1) {
+				std::cout << "hit ground\n";
+				c_Player.setPos(c_Player.getCollisionBox().centerX, currentSurface.y1);
 
-					c_Player.falling = false;
-
-					break;
-				}
-
-				c->collisionGroups[c->sheetIndex][c->textureIndex].y1 += c->deltaWorldY;
-				c->collisionGroups[c->sheetIndex][c->textureIndex].y2 += c->deltaWorldY;
-
-				c->renderGroups[c->sheetIndex][c->textureIndex].y += c->deltaCamY;
-
-				SDL_Delay(5);
+				break;
 			}
+
+			//fall 
+			c_Player.worldMove(ed_Dir::NONE, ed_Dir::DOWN);
+
+			if (!c_Player.yCamLocked) {
+				c_Player.camMove(ed_Dir::NONE, ed_Dir::DOWN);
+			}
+
+			SDL_Delay(5);
 		}
 	}
-}
-
-void updatePlayerGravity()
-{
-	
 }
 
 void updateVerticalPlayerMovement()

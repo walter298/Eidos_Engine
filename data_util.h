@@ -9,4 +9,6 @@ std::string ed_stringSection(std::string s, size_t start, size_t end);
 
 std::vector<int> ed_parseNums(std::string input);
 
+void printTwo(int x, int y);
+
 #endif

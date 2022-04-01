@@ -1,15 +1,12 @@
 #include "player_movement.h"
 
-void moveHorizontally(int constMovementInterval, int scanKeyID, int direction, const Uint8* key, Uint32 spriteChangeInterval, int sheetIndex) 
+void moveHorizontally(int constMovementInterval, int scanKeyID, ed_Dir direction, const Uint8* key, Uint32 spriteChangeInterval, int sheetIndex) 
 {
-	c_Player.tex.updateToCurrentTexture(sheetIndex, 1);
+	c_Player.changeTexture(sheetIndex, 1);
 
-	c_Player.tex.sheetIndex = 1;
-	c_Player.tex.textureIndex = 1;
+	size_t lastSpriteIndex = c_Player.getTextureGroupSize(sheetIndex) - 1;
 
-	size_t lastSpriteIndex = c_Player.tex.sheets[0].size() - 1;
-
-	c_Player.tex.sheetIndex = sheetIndex;
+	c_Player.changeTexture(sheetIndex, c_Player.getTextureIndex());
 
 	while (true) {
 		if (!key[scanKeyID]) {
@@ -19,22 +16,19 @@ void moveHorizontally(int constMovementInterval, int scanKeyID, int direction, c
 		if (SDL_GetTicks() >= spriteChangeInterval) {
 			spriteChangeInterval += constMovementInterval;
 
-			if (c_Player.tex.textureIndex == lastSpriteIndex) 
+			if (c_Player.getTextureIndex() == lastSpriteIndex) 
 			{
-				c_Player.tex.updateToCurrentTexture(c_Player.tex.sheetIndex, 1);
-				c_Player.tex.textureIndex = 1;
-			} else 
-			{
-				c_Player.tex.updateToCurrentTexture(c_Player.tex.sheetIndex, c_Player.tex.textureIndex + 1);
-
-				c_Player.tex.textureIndex++;
+				c_Player.changeTexture(c_Player.getSheetIndex(), 1);
+			} else {
+				c_Player.changeTexture(c_Player.getSheetIndex(), c_Player.getTextureIndex() + 1);
 			}
 		}
 
-		c_Player.tex.renderGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x += c_Player.tex.deltaCamX * direction;
+		if (!c_Player.xCamLocked) {
+			c_Player.camMove(direction, ed_Dir::NONE);
+		}
 
-		c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x1 += c_Player.tex.deltaWorldX * direction;
-		c_Player.tex.collisionGroups[c_Player.tex.sheetIndex][c_Player.tex.textureIndex].x2 += c_Player.tex.deltaWorldX * direction;
+		c_Player.worldMove(direction, ed_Dir::NONE);
 
 		spriteChangeInterval -= 20;
 
@@ -52,7 +46,7 @@ void ed_jumpInput(int constMovementInterval)
 
 	int jumpHeight;
 
-	while (ed_globalScene.executing) {
+	while (ed_running) {
 		if (key[SDL_SCANCODE_SPACE] && !c_Player.falling) {
 			c_Player.jump();
 		}
@@ -74,20 +68,19 @@ void ed_pMovementInput(int constMovementInterval)
 	std::thread jumpThread(ed_jumpInput, 5);
 	jumpThread.detach();
 
-	while (ed_globalScene.executing) {
+	while (ed_running) {
 		while (SDL_PollEvent(&evt)) {
 			if (evt.type == SDL_KEYDOWN) {
 				Uint32 spriteChangeInterval = SDL_GetTicks() + constMovementInterval;
 
 				if (key[SDL_SCANCODE_D]) {
-					moveHorizontally(constMovementInterval, 7, 1, key, spriteChangeInterval, 1);
+					moveHorizontally(constMovementInterval, 7, ed_Dir::RIGHT, key, spriteChangeInterval, 1);
 				} else if (key[SDL_SCANCODE_S]) {
-					moveHorizontally(constMovementInterval, 22, -1, key, spriteChangeInterval, 0);
+					moveHorizontally(constMovementInterval, 22, ed_Dir::LEFT, key, spriteChangeInterval, 0);
 				}
 			}
 
-			c_Player.tex.updateToCurrentTexture(c_Player.tex.sheetIndex, 0);
-			c_Player.tex.textureIndex = 0;
+			c_Player.changeTexture(c_Player.getSheetIndex(), 0);
 		} 
 	}
 }

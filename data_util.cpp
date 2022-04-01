@@ -33,3 +33,8 @@ std::vector<int> ed_parseNums(std::string input)
 
 	return nums;
 }
+
+void printTwo(int x, int y)
+{
+	std::cout << x << ", " << y << std::endl;
+}

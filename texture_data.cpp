@@ -75,7 +75,7 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 			for (size_t i = 1; i < group.size(); i++) {
 				std::vector<int> nums = ed_parseNums(group[i]);
 
-				texture.collisionGroups[nums[0]][nums[1]].init(nums[2], nums[3], nums[4], nums[5], nums[6], nums[7]);
+				texture.collisionGroups[nums[0]][nums[1]] = { nums[2], nums[3], nums[4], nums[5], nums[6], nums[7] };
 			}
 		} else if (group[0] == "DIMENSIONS") {
 			for (size_t i = 1; i < group.size(); i++) {
@@ -83,6 +83,13 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 
 				texture.renderGroups[nums[0]][nums[1]] = { 0, 0, nums[2], nums[3] };
 			}
+		} else if (group[0] == "SPEED") {
+			std::vector<int> nums = ed_parseNums(group[1]);
+
+			texture.deltaWorldX = nums[0];
+			texture.deltaWorldY = nums[1];
+			texture.deltaCamX = nums[2];
+			texture.deltaCamY = nums[3];
 		}
 	}
 }

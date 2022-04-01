@@ -1,9 +1,8 @@
 #ifndef PLAYER
 #define PLAYER
 
-#include <thread>
 
-#include "global.h"
+#include "scene.h"
 
 void ed_pMovementInput(int movementInterval);
 

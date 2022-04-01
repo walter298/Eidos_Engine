@@ -3,7 +3,7 @@
 
 #include <thread>
 
-#include "global.h"
+#include "scene.h"
 
 void ed_updateSurfaceBelowPlayer();
 
