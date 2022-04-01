@@ -4,7 +4,7 @@ ed_Surface getNearestFloor(ed_RenderObject* obj)
 {
 	std::vector<ed_Surface> surfacesBelow;
 
-	for (const ed_Surface surface : ed_globalScene.surfaces)
+	for (const ed_Surface surface : ed_globalScene->surfaces)
 	{
 		if (surface.x1 < obj->getCollisionBox().x1 && 
 			surface.x2 > obj->getCollisionBox().x2 && 

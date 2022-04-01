@@ -1,6 +1,6 @@
 #include "scene.h"
 
-ed_Scene ed_globalScene;
+ed_Scene* ed_globalScene;
 
 void ed_scaleScene(ed_Scene& scene)
 {
@@ -233,40 +233,20 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 	}
 }
 
-void ed_checkButtonInputs()
+void ed_executeScene(ed_Scene* scene)
 {
-	SDL_Event evt;
+	scene->init();
 
-	while (ed_running) {
-		while (SDL_PollEvent(&evt)) {
-			if (evt.type == SDL_MOUSEBUTTONDOWN) {
-				for (ed_Button& button : ed_globalScene.buttons) {
-					if (button.hovered()) {
-						button.reaction();
-					}
-				}
-			}
-		}
-	}
-}
-
-void ed_executeScene(ed_Scene& scene)
-{
 	ed_globalScene = scene;
 
-	ed_globalScene.init();
-
+	ed_globalScene->init();
+	
 	const int fps = 60;
-
-	for (void(*method)() : ed_globalScene.backgroundMethods) {
-		ed_runningThreads.insert(ed_runningThreads.begin(), (std::thread(method)));
-		ed_runningThreads[0].detach();
-	}
 
 	ed_running = true;
 
-	for (std::thread& t : ed_runningThreads) {
-		t.detach();
+	for (void(*method)() : ed_globalScene->backgroundMethods) {
+		ed_runningThreads.insert(ed_runningThreads.begin(), (std::thread(method)));
 	}
 
 	for (std::thread& t : ed_runningThreads) {
@@ -295,29 +275,24 @@ void ed_executeScene(ed_Scene& scene)
 		endTime = SDL_GetTicks() + waitTime;
 
 		//render backgrounds
-		for (ed_Texture& background : ed_globalScene.backgrounds) {
+		for (ed_Texture& background : ed_globalScene->backgrounds) {
 			SDL_RenderCopy(ed_mainRenderer, background.sheets[0][0], NULL, &background.renderGroups[0][0]);
 		}
 
 		//render foreground objects
-		for (ed_Texture& texture : ed_globalScene.foregroundObjects) {
+		for (ed_Texture& texture : ed_globalScene->foregroundObjects) {
 			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL,
 				&texture.renderGroups[texture.sheetIndex][texture.textureIndex]);
 		}
 
-		ed_globalScene.render();
+		ed_globalScene->render();
 
-		while (SDL_GetTicks() + (1000 / fps) < endTime) {}
+		while (SDL_GetTicks() + (1000 / fps) < endTime) {} //wait 
 
 		SDL_RenderPresent(ed_mainRenderer);
 	}
 }
 
-void ed_Menu::init()
-{
-	ed_runningThreads.insert(ed_runningThreads.begin(), std::thread(ed_checkButtonInputs));
-	ed_runningThreads[0].detach();
-}
 
 
 

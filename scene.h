@@ -30,20 +30,12 @@ public:
 
 	int pX = 0, pY = 0;
 
-	friend void ed_executeScene(ed_Scene& scene);
+	friend void ed_executeScene(ed_Scene* scene);
 };
 
-class ed_Menu : public ed_Scene
-{
-protected:
-	void render() override {};
+extern ed_Scene* ed_globalScene;
 
-	void init() override;
-};
-
-extern ed_Scene ed_globalScene;
-
-void ed_executeScene(ed_Scene& scene);
+void ed_executeScene(ed_Scene* scene);
 
 void ed_enterTextureData(ed_Texture& texture, std::string fileName);
 void ed_enterSceneData(ed_Scene& scene, std::string fileName);
