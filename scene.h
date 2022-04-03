@@ -12,9 +12,9 @@
 class ed_Scene 
 {
 protected:
-	virtual void render() {};
+	virtual void render() = 0;
 
-	virtual void init() {};
+	virtual void init() = 0;
 public:
 	std::vector<ed_Texture> backgrounds;
 

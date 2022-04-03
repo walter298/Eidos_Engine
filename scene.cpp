@@ -235,8 +235,6 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 
 void ed_executeScene(ed_Scene* scene)
 {
-	scene->init();
-
 	ed_globalScene = scene;
 
 	ed_globalScene->init();
@@ -291,6 +289,8 @@ void ed_executeScene(ed_Scene* scene)
 
 		SDL_RenderPresent(ed_mainRenderer);
 	}
+
+	ed_runningThreads.clear();
 }
 
 
