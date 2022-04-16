@@ -1,4 +1,4 @@
-#include "texture_data.h"
+#include "texture_editor.h"
 
 int editedTextureGroupIndex = 0;
 
@@ -20,16 +20,14 @@ bool changingTexture = false;
 
 bool applyAll = false;
 
-ed_Texture editedTexture;
-
 std::fstream textureFile;
 
 bool running = true;
 
-void ed_enterTextureData(ed_Texture& texture, std::string fileName)
+void ed_RenderObjectCreator::readData()
 {
 	std::ifstream file;
-	file.open(fileName.c_str());
+	file.open(this->path.c_str());
 
 	std::vector<std::vector<std::string>> dataPieces;
 	std::vector<std::string> currentData;
@@ -66,30 +64,30 @@ void ed_enterTextureData(ed_Texture& texture, std::string fileName)
 				collisionBoundaries.push_back({});
 			}
 
-			texture.sheets.push_back(newTextureGroup);
-			texture.renderGroups.push_back(dimensionBoundaries);
-			texture.collisionGroups.push_back(collisionBoundaries);
+			this->obj.sheets.push_back(newTextureGroup);
+			this->obj.renderGroups.push_back(dimensionBoundaries);
+			this->obj.collisionGroups.push_back(collisionBoundaries);
 		} else if (group[0] == "ID") {
-			texture.ID = std::stoi(group[1]);
+			this->obj.ID = std::stoi(group[1]);
 		} else if (group[0] == "COLLISION") {
 			for (size_t i = 1; i < group.size(); i++) {
 				std::vector<int> nums = ed_parseNums(group[i]);
 
-				texture.collisionGroups[nums[0]][nums[1]] = { nums[2], nums[3], nums[4], nums[5], nums[6], nums[7] };
+				this->obj.collisionGroups[nums[0]][nums[1]] = { nums[2], nums[3], nums[4], nums[5], nums[6], nums[7] };
 			}
 		} else if (group[0] == "DIMENSIONS") {
 			for (size_t i = 1; i < group.size(); i++) {
 				std::vector<int> nums = ed_parseNums(group[i]);
 
-				texture.renderGroups[nums[0]][nums[1]] = { 0, 0, nums[2], nums[3] };
+				this->obj.renderGroups[nums[0]][nums[1]] = { 0, 0, nums[2], nums[3] };
 			}
 		} else if (group[0] == "SPEED") {
 			std::vector<int> nums = ed_parseNums(group[1]);
 
-			texture.deltaWorldX = nums[0];
-			texture.deltaWorldY = nums[1];
-			texture.deltaCamX = nums[2];
-			texture.deltaCamY = nums[3];
+			this->obj.deltaWorldX = nums[0];
+			this->obj.deltaWorldY = nums[1];
+			this->obj.deltaCamX = nums[2];
+			this->obj.deltaCamY = nums[3];
 		}
 	}
 }
@@ -143,8 +141,7 @@ void checkCollisionChange()
 				}
 				else if (keyState[SDL_SCANCODE_LEFT]) {
 					collisionRect.w -= 5;
-				}
-				else if (keyState[SDL_SCANCODE_UP]) {
+				} else if (keyState[SDL_SCANCODE_UP]) {
 					collisionRect.h -= 5;
 				} else if (keyState[SDL_SCANCODE_DOWN]) {
 					collisionRect.h += 5;
@@ -210,11 +207,11 @@ void saveTexture(unsigned int localTextureIndex)
 	textureCollisionData.push_back(collisionDataPiece);
 }
 
-void checkModeChange()
+void ed_RenderObjectCreator::checkModeChange()
 {
 	std::string input;
 
-	std::thread currentThread;
+	//std::thread currentThread;
 
 	while (true) {
 		std::cin >> input;
@@ -222,11 +219,11 @@ void checkModeChange()
 		checking = false;
 		
 		if (input == "collision") {
-			currentThread = std::thread(checkCollisionChange);
-			currentThread.detach();
+			//currentThread = std::thread(checkCollisionChange);
+			//currentThread.detach();
 		} else if (input == "dimensions") {
-			currentThread = std::thread(checkDimensionChange);
-			currentThread.detach();
+			//currentThread = std::thread(checkDimensionChange);
+			//currentThread.detach();
 		} else if (input == "change_texture") {
 			std::cout << "changing texture\n";
 
@@ -240,8 +237,8 @@ void checkModeChange()
 			std::cout << "enter texture index:";
 			std::cin >> cTextureIndex;
 
-			if (!(cSheetIndex < 0) && !(cSheetIndex >= editedTexture.sheets.size())) {
-				if (!(cTextureIndex < 0) && !(cTextureIndex >= editedTexture.sheets[cSheetIndex].size())) {
+			if (!(cSheetIndex < 0) && !(cSheetIndex >= this->obj.sheets.size())) {
+				if (!(cTextureIndex < 0) && !(cTextureIndex >= this->obj.sheets[cSheetIndex].size())) {
 					sheetIndex = cSheetIndex;
 					textureIndex = cTextureIndex;
 
@@ -262,7 +259,7 @@ void checkModeChange()
 		} else if (input == "save_sprite_sheet") {
 			std::cout << "saving sprite sheet...\n";
 
-			for (unsigned int i = 0; i < editedTexture.sheets[sheetIndex].size(); i++) {
+			for (unsigned int i = 0; i < this->obj.sheets[sheetIndex].size(); i++) {
 				saveTexture(i);
 			}
 
@@ -299,19 +296,17 @@ void checkModeChange()
 	}
 }
 
-void ed_enterTextureCollision(std::string dataPath)
+void ed_RenderObjectCreator::putCollisionData()
 {
-	textureFile.open(dataPath.c_str(), std::ios::app);
+	textureFile.open(this->path.c_str(), std::ios::app);
 
 	if (!textureFile.is_open()) {
-		std::cout << "Error: " << "could not open " << dataPath.c_str() << std::endl;
+		std::cout << "Error: " << "could not open " << this->path.c_str() << std::endl;
 
 		return;
 	}
 
-	ed_enterTextureData(editedTexture, dataPath.c_str());
-
-	std::thread modeCheck(checkModeChange);
+	std::thread modeCheck(&ed_RenderObjectCreator::checkModeChange, this);
 	modeCheck.detach();
 
 	SDL_Event evt;
@@ -330,7 +325,7 @@ void ed_enterTextureCollision(std::string dataPath)
 		SDL_SetRenderDrawColor(ed_mainRenderer, 255, 255, 255, 255);
 
 		if (!changingTexture) {
-			SDL_RenderCopy(ed_mainRenderer, editedTexture.sheets[sheetIndex][textureIndex], NULL, &dimensionRect);
+			SDL_RenderCopy(ed_mainRenderer, this->obj.getCurrentTexture(), NULL, &dimensionRect);
 		}
 
 		SDL_RenderPresent(ed_mainRenderer);

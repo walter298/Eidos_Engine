@@ -35,7 +35,7 @@ void ed_updateSurfaceBelowPlayer()
 	}
 }
 
-ed_Surface getNearestWall(ed_Texture tex)
+ed_Surface getNearestWall(ed_RenderObject tex)
 {
 	return {};
 }
@@ -70,7 +70,6 @@ void ed_checkPlayerCollision()
 
 		while (true) {
 			if (c_Player.getCollisionBox().y2 >= currentSurface.y1) {
-				std::cout << "hit ground\n";
 				c_Player.setPos(c_Player.getCollisionBox().centerX, currentSurface.y1);
 
 				break;

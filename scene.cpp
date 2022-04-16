@@ -31,35 +31,12 @@ void ed_scaleScene(ed_Scene& scene)
 	SDL_SetWindowPosition(ed_mainWindow, 0, 0);
 
 	//change background sizes
-	for (ed_Texture& t : scene.backgrounds) {
-		t.renderGroups[t.sheetIndex][t.textureIndex].w = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].w, 1920, newWindowWidth);
-		t.renderGroups[t.sheetIndex][t.textureIndex].h = scaledRelativePosition(t.renderGroups[t.sheetIndex][t.textureIndex].h, 1080, newWindowHeight);
-
-		t.renderGroups[0][0].x = scaledRelativePosition(t.renderGroups[0][0].x, 1920, newWindowWidth);
+	for (ed_RenderObject& t : scene.backgrounds) {
+		t.scale(newWindowWidth, newWindowHeight);
 	}
 
-	for (ed_Texture& t : scene.foregroundObjects) {
-		for (size_t i = 0; i < t.sheets.size(); i++) {
-			for (size_t j = 0; j < t.sheets[i].size(); j++) {
-				t.renderGroups[i][j].x = scaledRelativePosition(t.renderGroups[i][j].x, 1920, newWindowWidth);
-				t.renderGroups[i][j].y = scaledRelativePosition(t.renderGroups[i][j].y, 1080, newWindowHeight);
-
-				t.renderGroups[i][j].w = scaledRelativePosition(t.renderGroups[i][j].w, 1920, newWindowWidth);
-				t.renderGroups[i][j].h = scaledRelativePosition(t.renderGroups[i][j].h, 1080, newWindowHeight);
-
-				t.collisionGroups[i][j].y1 = scaledRelativePosition(t.collisionGroups[i][j].y1, 1920, newWindowWidth);
-				t.collisionGroups[i][j].y2 = scaledRelativePosition(t.collisionGroups[i][j].y2, 1080, newWindowHeight);
-
-				t.collisionGroups[i][j].x1 = scaledRelativePosition(t.collisionGroups[i][j].x1, 1920, newWindowWidth);
-				t.collisionGroups[i][j].x2 = scaledRelativePosition(t.collisionGroups[i][j].x2, 1080, newWindowHeight);
-			}
-		}
-
-		t.deltaCamX = scaledRelativePosition(t.deltaCamX, 1920, newWindowWidth);
-		t.deltaCamY = scaledRelativePosition(t.deltaCamY, 1080, newWindowHeight);
-
-		t.deltaWorldX = scaledRelativePosition(t.deltaWorldX, 1920, newWindowWidth);
-		t.deltaWorldY = scaledRelativePosition(t.deltaWorldY, 1080, newWindowHeight);
+	for (ed_RenderObject& t : scene.foregroundObjects) {
+		t.scale(newWindowWidth, newWindowHeight);
 	}
 
 	for (ed_Surface& surface : scene.surfaces) {
@@ -79,7 +56,7 @@ void ed_scaleScene(ed_Scene& scene)
 	}
 }
 
-void ed_parseButtons(ed_Scene& scene, std::vector<std::string> input)
+void ed_Scene::parseButtons(std::vector<std::string> input)
 {
 	for (int stringIndex = 1; stringIndex < input.size(); stringIndex++) {
 		if (input[stringIndex].empty()) {
@@ -110,11 +87,11 @@ void ed_parseButtons(ed_Scene& scene, std::vector<std::string> input)
 
 		newButton = { newButtonCoords[0], newButtonCoords[1], newButtonCoords[2], newButtonCoords[3] };
 
-		scene.buttons.push_back(newButton);
+		this->buttons.push_back(newButton);
 	}
 }
 
-void ed_parseBackgroundImage(ed_Scene& scene, std::vector<std::string> input)
+void ed_Scene::parseBackgroundImage(std::vector<std::string> input)
 {
 	for (size_t i = 1; i < input.size(); i++) {
 		if (input[i].empty()) {
@@ -123,22 +100,22 @@ void ed_parseBackgroundImage(ed_Scene& scene, std::vector<std::string> input)
 
 		std::string imagePath = input[i];
 
-		ed_Texture background;
+		ed_RenderObject background;
 
 		background.sheets.push_back({});
 		background.renderGroups.push_back({ {} });
 
 		background.sheets[0].push_back({ IMG_LoadTexture(ed_mainRenderer, imagePath.c_str()) });
 
-		int backgroundIndex = scene.backgrounds.size();
+		int backgroundIndex = this->backgrounds.size();
 
 		background.renderGroups[0][0] = { 1920 * backgroundIndex, 0, 1920, 1080 };
 
-		scene.backgrounds.push_back(background);
+		this->backgrounds.push_back(background);
 	}
 }
 
-void ed_enterSceneData(ed_Scene& scene, std::string fileName)
+void ed_Scene::readData(std::string fileName)
 {
 	std::ifstream file;
 	file.open(fileName.c_str());
@@ -176,13 +153,11 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 		}
 
 		if (dataPiece[0] == "BACKGROUND_IMAGES") {
-			ed_parseBackgroundImage(scene, dataPiece);
-		}
-		else if (dataPiece[0] == "BUTTONS") {
-			ed_parseButtons(scene, dataPiece);
-		}
-		else if (dataPiece[0] == "TEXTURE_PLACEMENT") {
-			ed_Texture texture = ed_loadedTextures[std::stoi(dataPiece[1])];
+			this->parseBackgroundImage(dataPiece);
+		} else if (dataPiece[0] == "BUTTONS") {
+			this->parseButtons(dataPiece);
+		} else if (dataPiece[0] == "TEXTURE_PLACEMENT") {
+			ed_RenderObject texture = ed_loadedTextures[std::stoi(dataPiece[1])];
 
 			std::vector<int> nums = ed_parseNums(dataPiece[2]);
 
@@ -199,18 +174,16 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 
 			texture.collisionGroups[texture.sheetIndex][texture.textureIndex].y1 = nums[1];
 			texture.collisionGroups[texture.sheetIndex][texture.textureIndex].x1 = nums[1] + yRemainder;
-		}
-		else if (dataPiece[0] == "PLAYER_PLACEMENT") {
+		} else if (dataPiece[0] == "PLAYER_PLACEMENT") {
 			std::vector<int> nums = ed_parseNums(dataPiece[1]);
 
 			int x = nums[0], y = nums[1]; //our center point
 
-			scene.pX = x;
-			scene.pY = y;
+			this->pX = x;
+			this->pY = y;
 
 			//c_Player.tex.updateToPosition(0, 0, x, y);
-		}
-		else if (dataPiece[0] == "FLOOR") {
+		} else if (dataPiece[0] == "FLOOR") {
 			ed_Surface newFloor;
 
 			std::vector<int> lengthPeriod = ed_parseNums(dataPiece[1]);
@@ -223,9 +196,8 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 			newFloor.y1 = heightPeriod[0];
 			newFloor.y2 = heightPeriod[1];
 
-			scene.surfaces.push_back(newFloor);
-		}
-		else {
+			this->surfaces.push_back(newFloor);
+		} else {
 			std::cout << "Error. Unknown object: " << dataPiece[0] << std::endl;
 
 			return;
@@ -233,9 +205,9 @@ void ed_enterSceneData(ed_Scene& scene, std::string fileName)
 	}
 }
 
-void ed_executeScene(ed_Scene* scene)
+void ed_Scene::execute()
 {
-	ed_globalScene = scene;
+	ed_globalScene = this;
 
 	ed_globalScene->init();
 	
@@ -243,13 +215,15 @@ void ed_executeScene(ed_Scene* scene)
 
 	ed_running = true;
 
-	for (void(*method)() : ed_globalScene->backgroundMethods) {
-		ed_runningThreads.insert(ed_runningThreads.begin(), (std::thread(method)));
+	for (void(*&method)() : ed_globalScene->backgroundMethods) {
+		ed_runningThreads.push_back(std::thread(method));
 	}
 
 	for (std::thread& t : ed_runningThreads) {
 		t.detach();
 	}
+
+	std::cout << "background methods: " << ed_runningThreads.size() << std::endl;
 
 	SDL_Event evt;
 
@@ -273,21 +247,21 @@ void ed_executeScene(ed_Scene* scene)
 		endTime = SDL_GetTicks() + waitTime;
 
 		//render backgrounds
-		for (ed_Texture& background : ed_globalScene->backgrounds) {
+		for (ed_RenderObject& background : ed_globalScene->backgrounds) {
 			SDL_RenderCopy(ed_mainRenderer, background.sheets[0][0], NULL, &background.renderGroups[0][0]);
 		}
 
 		//render foreground objects
-		for (ed_Texture& texture : ed_globalScene->foregroundObjects) {
+		for (ed_RenderObject& texture : ed_globalScene->foregroundObjects) {
 			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL,
 				&texture.renderGroups[texture.sheetIndex][texture.textureIndex]);
 		}
 
 		ed_globalScene->render();
 
-		while (SDL_GetTicks() + (1000 / fps) < endTime) {} //wait 
-
-		SDL_RenderPresent(ed_mainRenderer);
+		if (!SDL_GetTicks() + (1000 / fps) < endTime) {
+			SDL_RenderPresent(ed_mainRenderer);
+		}
 	}
 
 	ed_runningThreads.clear();
