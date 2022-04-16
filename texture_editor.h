@@ -13,6 +13,8 @@ private:
 
 	std::string path;
 
+	void saveTexture(size_t textureIndex);
+
 	void checkModeChange();
 public:
 	ed_RenderObjectCreator(ed_RenderObject& _obj, std::string _path)

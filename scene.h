@@ -9,6 +9,8 @@
 #include "global.h"
 #include "data_util.h"
 
+class ed_SceneEditor;
+
 class ed_Scene 
 {
 protected:
@@ -50,6 +52,8 @@ public:
 	void ed_scaleScene(ed_Scene& scene);
 
 	void(*customInit)() = {};
+
+	friend class ed_SceneEditor;
 };
 
 extern ed_Scene* ed_globalScene;

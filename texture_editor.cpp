@@ -1,9 +1,9 @@
 #include "texture_editor.h"
 
-int editedTextureGroupIndex = 0;
-
-int editedTextureIndex = 0;
-int editedSpriteIndex = 0;
+//int editedTextureGroupIndex = 0;
+//
+//int editedTextureIndex = 0;
+//int editedSpriteIndex = 0;
 
 SDL_Rect collisionRect = {500, 500, 200, 200};
 
@@ -11,12 +11,8 @@ SDL_Rect dimensionRect = { 500, 500, 200, 200 };
 
 bool checking = false;
 
-int sheetIndex = 0, textureIndex = 0;
-
 std::vector<std::string> textureCollisionData;
 std::vector<std::string> textureDimensionData;
-
-bool changingTexture = false;
 
 bool applyAll = false;
 
@@ -159,10 +155,10 @@ void checkCollisionChange()
 	}
 }
 
-void saveTexture(unsigned int localTextureIndex)
+void ed_RenderObjectCreator::saveTexture(size_t textureIndex)
 {
-	std::string cSheetIndex = std::to_string(sheetIndex);
-	std::string cTextureIndex = std::to_string(localTextureIndex);
+	std::string cSheetIndex = std::to_string(this->obj.getSheetIndex());
+	std::string cTextureIndex = std::to_string(textureIndex);
 
 	std::string width = std::to_string(dimensionRect.w);
 	std::string height = std::to_string(dimensionRect.h);
@@ -211,7 +207,7 @@ void ed_RenderObjectCreator::checkModeChange()
 {
 	std::string input;
 
-	//std::thread currentThread;
+	std::thread currentThread;
 
 	while (true) {
 		std::cin >> input;
@@ -219,15 +215,13 @@ void ed_RenderObjectCreator::checkModeChange()
 		checking = false;
 		
 		if (input == "collision") {
-			//currentThread = std::thread(checkCollisionChange);
-			//currentThread.detach();
+			currentThread = std::thread(checkCollisionChange);
+			currentThread.detach();
 		} else if (input == "dimensions") {
-			//currentThread = std::thread(checkDimensionChange);
-			//currentThread.detach();
+			currentThread = std::thread(checkDimensionChange);
+			currentThread.detach();
 		} else if (input == "change_texture") {
 			std::cout << "changing texture\n";
-
-			changingTexture = true;
 
 			int cSheetIndex, cTextureIndex;
 
@@ -239,10 +233,7 @@ void ed_RenderObjectCreator::checkModeChange()
 
 			if (!(cSheetIndex < 0) && !(cSheetIndex >= this->obj.sheets.size())) {
 				if (!(cTextureIndex < 0) && !(cTextureIndex >= this->obj.sheets[cSheetIndex].size())) {
-					sheetIndex = cSheetIndex;
-					textureIndex = cTextureIndex;
-
-					changingTexture = false;
+					this->obj.changeTexture(cSheetIndex, cTextureIndex);
 				} else {
 					std::cout << "Error: texture index out of range\n";
 				}
@@ -253,13 +244,13 @@ void ed_RenderObjectCreator::checkModeChange()
 		else if (input == "save_texture") {
 			std::cout << "saving texture...\n";
 
-			saveTexture(textureIndex);
+			saveTexture(this->obj.getTextureIndex());
 
 			std::cout << "texture successfully saved\n";
 		} else if (input == "save_sprite_sheet") {
 			std::cout << "saving sprite sheet...\n";
 
-			for (unsigned int i = 0; i < this->obj.sheets[sheetIndex].size(); i++) {
+			for (unsigned int i = 0; i < this->obj.sheets[this->obj.getSheetIndex()].size(); i++) {
 				saveTexture(i);
 			}
 
@@ -300,6 +291,8 @@ void ed_RenderObjectCreator::putCollisionData()
 {
 	textureFile.open(this->path.c_str(), std::ios::app);
 
+	this->readData();
+
 	if (!textureFile.is_open()) {
 		std::cout << "Error: " << "could not open " << this->path.c_str() << std::endl;
 
@@ -324,9 +317,7 @@ void ed_RenderObjectCreator::putCollisionData()
 
 		SDL_SetRenderDrawColor(ed_mainRenderer, 255, 255, 255, 255);
 
-		if (!changingTexture) {
-			SDL_RenderCopy(ed_mainRenderer, this->obj.getCurrentTexture(), NULL, &dimensionRect);
-		}
+		SDL_RenderCopy(ed_mainRenderer, this->obj.getCurrentTexture(), NULL, &dimensionRect);
 
 		SDL_RenderPresent(ed_mainRenderer);
 
