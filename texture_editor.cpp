@@ -75,7 +75,7 @@ void ed_RenderObjectCreator::readData()
 			for (size_t i = 1; i < group.size(); i++) {
 				std::vector<int> nums = ed_parseNums(group[i]);
 
-				this->obj.renderGroups[nums[0]][nums[1]] = { 0, 0, nums[2], nums[3] };
+				this->obj.renderGroups[nums[0]][nums[1]] = { nums[2], nums[3], nums[4], nums[5] };
 			}
 		} else if (group[0] == "SPEED") {
 			std::vector<int> nums = ed_parseNums(group[1]);
@@ -134,8 +134,7 @@ void checkCollisionChange()
 			if (evt.type == SDL_KEYDOWN) {
 				if (keyState[SDL_SCANCODE_RIGHT]) {
 					collisionRect.w += 5;
-				}
-				else if (keyState[SDL_SCANCODE_LEFT]) {
+				} else if (keyState[SDL_SCANCODE_LEFT]) {
 					collisionRect.w -= 5;
 				} else if (keyState[SDL_SCANCODE_UP]) {
 					collisionRect.h -= 5;
@@ -160,6 +159,9 @@ void ed_RenderObjectCreator::saveTexture(size_t textureIndex)
 	std::string cSheetIndex = std::to_string(this->obj.getSheetIndex());
 	std::string cTextureIndex = std::to_string(textureIndex);
 
+	std::string x = std::to_string(dimensionRect.x);
+	std::string y = std::to_string(dimensionRect.y);
+
 	std::string width = std::to_string(dimensionRect.w);
 	std::string height = std::to_string(dimensionRect.h);
 
@@ -168,6 +170,10 @@ void ed_RenderObjectCreator::saveTexture(size_t textureIndex)
 	dimensionDataPiece.append(cSheetIndex);
 	dimensionDataPiece.append("_");
 	dimensionDataPiece.append(cTextureIndex);
+	dimensionDataPiece.append("_");
+	dimensionDataPiece.append(x);
+	dimensionDataPiece.append("_");
+	dimensionDataPiece.append(y);
 	dimensionDataPiece.append("_");
 	dimensionDataPiece.append(width);
 	dimensionDataPiece.append("_");
@@ -179,8 +185,8 @@ void ed_RenderObjectCreator::saveTexture(size_t textureIndex)
 	std::string col_y = std::to_string(collisionRect.y);
 	std::string col_x2 = std::to_string(collisionRect.x + collisionRect.w);
 	std::string col_y2 = std::to_string(collisionRect.y + collisionRect.h);
-	std::string centerX = std::to_string((collisionRect.x + collisionRect.w) / 2);
-	std::string centerY = std::to_string((collisionRect.y + collisionRect.h) / 2);
+	std::string centerX = std::to_string(collisionRect.x + collisionRect.w / 2);
+	std::string centerY = std::to_string(collisionRect.y + collisionRect.h / 2);
 
 	std::string collisionDataPiece;
 
@@ -190,9 +196,9 @@ void ed_RenderObjectCreator::saveTexture(size_t textureIndex)
 	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_x);
 	collisionDataPiece.append("_");
-	collisionDataPiece.append(col_x2);
-	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_y);
+	collisionDataPiece.append("_");
+	collisionDataPiece.append(col_x2);
 	collisionDataPiece.append("_");
 	collisionDataPiece.append(col_y2);
 	collisionDataPiece.append("_");

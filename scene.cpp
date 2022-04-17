@@ -209,7 +209,10 @@ void ed_Scene::execute()
 {
 	ed_globalScene = this;
 
-	ed_globalScene->init();
+	//initialize
+	ed_globalScene->setTexturePositions();
+	ed_globalScene->initThreads();
+	ed_globalScene->customInit();
 	
 	const int fps = 60;
 
@@ -225,16 +228,14 @@ void ed_Scene::execute()
 
 	std::cout << "background methods: " << ed_runningThreads.size() << std::endl;
 
-	SDL_Event evt;
-
 	const Uint8* mainKey = SDL_GetKeyboardState(NULL); //handles main inputs like quitting the game
 
 	int waitTime;
 	int endTime;
 
 	while (ed_running) {
-		while (SDL_PollEvent(&evt)) {
-			switch (evt.type) {
+		while (SDL_PollEvent(&ed_input)) {
+			switch (ed_input.type) {
 			case SDL_QUIT:
 				ed_running = false;
 				break;
@@ -259,7 +260,11 @@ void ed_Scene::execute()
 
 		ed_globalScene->render();
 
-		if (!SDL_GetTicks() + (1000 / fps) < endTime) {
+		if (SDL_GetTicks() < endTime) {
+			SDL_Delay(endTime - SDL_GetTicks());
+
+			SDL_RenderPresent(ed_mainRenderer);
+		} else {
 			SDL_RenderPresent(ed_mainRenderer);
 		}
 	}

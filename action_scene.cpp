@@ -1,10 +1,8 @@
 #include "action_scene.h"
 
-void ed_ActionScene::init()
+void ed_ActionScene::setTexturePositions()
 {
 	c_Player.setPos(this->pX, this->pY);
-
-	this->customInit();
 }
 
 void ed_ActionScene::render()

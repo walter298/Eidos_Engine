@@ -81,18 +81,26 @@ protected:
 		auto* collisionBox = &this->collisionGroups[sheetIndex][textureIndex];
 		auto* texture = &this->renderGroups[sheetIndex][textureIndex];
 
+		int distanceFromX = collisionBox->centerX - texture->x;
+		int distanceFromY = collisionBox->centerY - texture->y;
+
+		std::cout << "texture x and collision x\n";
+		std::cout << texture->x << ", " << collisionBox->x1 << std::endl;
+
+		std::cout << distanceFromX << ", " << distanceFromY << std::endl;
+
 		int xDistance = collisionBox->centerX - collisionBox->x1;
 		int yDistance = collisionBox->centerY - collisionBox->y1;
 
 		collisionBox->centerX = x;
-		collisionBox->centerY = y - yDistance;
+		collisionBox->centerY = y;
 		collisionBox->x1 = x - xDistance;
-		collisionBox->y1 = y - yDistance * 2;
+		collisionBox->y1 = y - yDistance;
 		collisionBox->x2 = x + xDistance;
-		collisionBox->y2 = y;
+		collisionBox->y2 = y + yDistance;
 
-		texture->x = collisionBox->x1;
-		texture->y = collisionBox->y1;
+		texture->x = collisionBox->centerX - distanceFromX;
+		texture->y = collisionBox->centerY - distanceFromY;
 	}
 
 	size_t sheetIndex = 0;
@@ -102,6 +110,8 @@ protected:
 
 	int deltaCamX = 0, deltaCamY = 0;
 	int deltaWorldX = 0, deltaWorldY = 0;
+
+	const int distFromCX = 0, distFromCY = 0;
 public:
 	std::vector<void(*)()> backgroundMethods;
 

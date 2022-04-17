@@ -17,7 +17,7 @@ void ed_checkButtonInputs()
 	}
 }
 
-void ed_Menu::init()
+void ed_Menu::initThreads()
 {
 	ed_runningThreads.insert(ed_runningThreads.begin(), std::thread(ed_checkButtonInputs));
 }

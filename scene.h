@@ -16,7 +16,8 @@ class ed_Scene
 protected:
 	virtual void render() = 0;
 
-	virtual void init() = 0;
+	virtual void setTexturePositions() = 0;
+	virtual void initThreads() = 0;
 public:
 	std::vector<ed_RenderObject> backgrounds;
 
