@@ -9,10 +9,21 @@
 #include "rendering.h"
 
 class ed_Surface {
+	//int iCX = 0, iCY = 0;
 public:
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
 	int centerX = 0, centerY = 0;
+
+	/*int getICX()
+	{
+		return iCX;
+	}
+
+	int getICY()
+	{
+		return iCY;
+	}*/
 };
 
 class ed_Button {
@@ -38,6 +49,9 @@ class ed_Scene;
 class ed_RenderObjectCreator;
 
 class ed_RenderObject {
+private:
+	int distWX = 0, distWY = 0;
+	int distTX = 0, distTY = 0;
 protected:
 	std::vector<std::vector<SDL_Texture*>> sheets; //spritesheet
 
@@ -47,60 +61,38 @@ protected:
 
 	SDL_Texture* currentTexture;
 
-	void updateToCurrentTexture(size_t sheetIndex, size_t textureIndex)
+	void updateToCurrentTexture(size_t _sheetIndex, size_t _textureIndex)
 	{
-		//our current render position
-		int CRX = this->renderGroups[this->sheetIndex][this->textureIndex].x;
-		int CRY = this->renderGroups[this->sheetIndex][this->textureIndex].y;
-
-		//set new texture to be at current position
-		this->renderGroups[sheetIndex][textureIndex].x = CRX;
-		this->renderGroups[sheetIndex][textureIndex].y = CRY;
-
 		ed_Surface* currentSurface = &this->collisionGroups[this->sheetIndex][this->textureIndex];
-		ed_Surface* updatedSurface = &this->collisionGroups[sheetIndex][textureIndex];
+		SDL_Rect* currentRect = &this->renderGroups[this->sheetIndex][this->textureIndex];
 
-		//our current collision position
-		size_t centerX = currentSurface->centerX;
-		size_t centerY = currentSurface->centerY;
+		ed_Surface* updatedSurface = &this->collisionGroups[_sheetIndex][_textureIndex];
+		SDL_Rect* updatedRect = &this->renderGroups[_sheetIndex][_textureIndex];
+		
+		//collision constant's distance from center x and y
+		int distanceFromSX = updatedSurface->centerX - updatedSurface->x1;
+		int distanceFromSY = updatedSurface->centerY - updatedSurface->y1;
 
-		int distX = updatedSurface->x2 - centerY;
-		int distY = updatedSurface->y2 - centerY;
+		//set centers to be the same
+		updatedSurface->centerX = currentSurface->centerX;
+		updatedSurface->centerY = currentSurface->centerY;
 
-		//set collision constants to be at current position
-		updatedSurface->centerX = centerX;
-		updatedSurface->centerY = centerY;
-		updatedSurface->x1 = centerX - distX;
-		updatedSurface->y1 = centerY - distY;
-		updatedSurface->x2 = centerX + distX;
-		updatedSurface->y2 = centerY + distY;
+		updatedSurface->x1 = updatedSurface->centerX - distanceFromSX;
+		updatedSurface->x2 = updatedSurface->centerX + distanceFromSX;
+		updatedSurface->y1 = updatedSurface->centerY - distanceFromSY;
+		updatedSurface->y2 = updatedSurface->centerY + distanceFromSY;
+
+		updatedRect->x = currentRect->x;
+		updatedRect->y = currentRect->y;
 	}
 
-	void updateToPosition(size_t sheetIndex, size_t textureIndex, int x, int y)
+	void updateToCurrentOutsideTexture(size_t _sheetIndex, size_t _textureIndex)
 	{
-		auto* collisionBox = &this->collisionGroups[sheetIndex][textureIndex];
-		auto* texture = &this->renderGroups[sheetIndex][textureIndex];
+		ed_Surface* currentSurface = &this->collisionGroups[this->sheetIndex][this->textureIndex];
+		SDL_Rect* currentRect = &this->renderGroups[this->sheetIndex][this->textureIndex];
 
-		int distanceFromX = collisionBox->centerX - texture->x;
-		int distanceFromY = collisionBox->centerY - texture->y;
-
-		std::cout << "texture x and collision x\n";
-		std::cout << texture->x << ", " << collisionBox->x1 << std::endl;
-
-		std::cout << distanceFromX << ", " << distanceFromY << std::endl;
-
-		int xDistance = collisionBox->centerX - collisionBox->x1;
-		int yDistance = collisionBox->centerY - collisionBox->y1;
-
-		collisionBox->centerX = x;
-		collisionBox->centerY = y;
-		collisionBox->x1 = x - xDistance;
-		collisionBox->y1 = y - yDistance;
-		collisionBox->x2 = x + xDistance;
-		collisionBox->y2 = y + yDistance;
-
-		texture->x = collisionBox->centerX - distanceFromX;
-		texture->y = collisionBox->centerY - distanceFromY;
+		ed_Surface* updatedSurface = &this->collisionGroups[_sheetIndex][_textureIndex];
+		SDL_Rect* updatedRect = &this->renderGroups[_sheetIndex][_textureIndex];
 	}
 
 	size_t sheetIndex = 0;
@@ -194,21 +186,46 @@ public:
 	}
 
 	void setPos(int x, int y) {
-		this->updateToPosition(this->getSheetIndex(), this->getTextureIndex(), x, y);
+		int distX = x - getCollisionBox().centerX;
+		int distY = y - getCollisionBox().centerY;
+
+		for (std::vector<ed_Surface>& sv : collisionGroups) {
+			for (ed_Surface& s : sv) {
+				s.x1 += distX;
+				s.x2 += distX;
+				s.centerX += distX;
+
+				s.y1 += distY;
+				s.y2 += distY;
+				s.centerY += distY;
+			}
+		}
+
+		for (std::vector<SDL_Rect>& tv : renderGroups) {
+			for (SDL_Rect& r : tv) {
+				r.x += distX;
+				r.y += distY;
+			}
+		}
 	}
 
 	void setRenderPos(int x, int y)
 	{
 		SDL_Rect* rect = &this->renderGroups[this->getSheetIndex()][this->getTextureIndex()];
 
-		rect->x = x;
-		rect->y = y;
+		int distX = x - rect->x;
+		int distY = y - rect->y;
+
+		for (size_t i = 0; i < renderGroups.size(); i++) {
+			for (size_t j = 0; j < renderGroups.size(); j++) {
+				renderGroups[i][j].x += distX;
+				renderGroups[i][j].y += distY;
+			}
+		}
 	}
 
 	void changeTexture(size_t sheetIndex, size_t textureIndex) 
 	{
-		this->updateToCurrentTexture(sheetIndex, textureIndex);
-
 		this->sheetIndex = sheetIndex;
 		this->textureIndex = textureIndex;
 
@@ -220,14 +237,19 @@ public:
 		return this->sheets[sheetIndex].size();
 	}
 
+	std::vector<std::vector<ed_Surface>> getCollisionGroups()
+	{
+		return collisionGroups;
+	}
+
 	void worldMove(ed_Dir xDir, ed_Dir yDir)
 	{
 		int xWay = 0, yWay = 0;
 
 		if (xDir == ed_Dir::RIGHT) {
 			xWay = 1;
-		} else if (xDir == ed_Dir::RIGHT) {
-			yWay = -1;
+		} else if (xDir == ed_Dir::LEFT) {
+			xWay = -1;
 		}
 
 		if (yDir == ed_Dir::DOWN) {
@@ -236,11 +258,29 @@ public:
 			yWay = -1;
 		} 
 
-		this->collisionGroups[this->getSheetIndex()][this->getTextureIndex()].x1 += this->getDeltaWorldX() * xWay;
-		this->collisionGroups[this->getSheetIndex()][this->getTextureIndex()].x2 += this->getDeltaWorldX() * xWay;
+		//test
+		for (size_t i = 0; i < collisionGroups.size(); i++) {
+			for (size_t j = 0; j < collisionGroups[i].size(); j++) {
+				collisionGroups[i][j].x1 += getDeltaWorldX() * xWay;
+				collisionGroups[i][j].x2 += getDeltaWorldX() * xWay;
+				collisionGroups[i][j].centerX += getDeltaWorldX() * xWay;
 
-		this->collisionGroups[this->getSheetIndex()][this->getTextureIndex()].y1 += this->getDeltaWorldX() * yWay;
-		this->collisionGroups[this->getSheetIndex()][this->getTextureIndex()].y2 += this->getDeltaWorldX() * yWay;
+				collisionGroups[i][j].y1 += getDeltaWorldX() * yWay;
+				collisionGroups[i][j].y2 += getDeltaWorldX() * yWay;
+				collisionGroups[i][j].centerY += getDeltaWorldX() * yWay;
+			}
+		}
+
+		//end test
+
+		//origingal code
+		/*collisionGroups[getSheetIndex()][getTextureIndex()].x1 += getDeltaWorldX() * xWay;
+		collisionGroups[getSheetIndex()][getTextureIndex()].x2 += getDeltaWorldX() * xWay;
+		collisionGroups[getSheetIndex()][getTextureIndex()].centerX += getDeltaWorldX() * xWay;
+
+		collisionGroups[getSheetIndex()][getTextureIndex()].y1 += getDeltaWorldX() * yWay;
+		collisionGroups[getSheetIndex()][getTextureIndex()].y2 += getDeltaWorldX() * yWay;
+		collisionGroups[getSheetIndex()][getTextureIndex()].centerY += getDeltaWorldX() * yWay;*/
 	}
 
 	void camMove(ed_Dir xDir, ed_Dir yDir)
@@ -259,8 +299,19 @@ public:
 			yWay = -1;
 		}
 
-		this->renderGroups[this->getSheetIndex()][this->getTextureIndex()].x += this->getDeltaCamX() * xWay;
-		this->renderGroups[this->getSheetIndex()][this->getTextureIndex()].y += this->getDeltaCamX() * yWay;
+		//test
+		for (size_t i = 0; i < renderGroups.size(); i++) {
+			for (size_t j = 0; j < renderGroups[i].size(); j++) {
+				renderGroups[i][j].x += getDeltaCamX() * xWay;
+				renderGroups[i][j].y += getDeltaCamX() * yWay;
+			}
+		}
+
+		//end test
+
+		//original code
+		/*renderGroups[getSheetIndex()][getTextureIndex()].x += getDeltaCamX() * xWay;
+		renderGroups[getSheetIndex()][getTextureIndex()].y += getDeltaCamX() * yWay;*/
 	}
 
 	bool falling = false;

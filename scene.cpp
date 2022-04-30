@@ -205,14 +205,28 @@ void ed_Scene::readData(std::string fileName)
 	}
 }
 
+void renderCollisionBoxs(ed_RenderObject* s) {
+	//std::cout << s->getCollisionBox().x1 << ", " << s->getCollisionBox().x2 << std::endl;
+
+	SDL_Rect collisionRect = { s->getCollisionBox().x1, s->getCollisionBox().y1,
+		s->getCollisionBox().x2 - s->getCollisionBox().x1, s->getCollisionBox().y2 - s->getCollisionBox().y1 };
+
+	SDL_RenderDrawRect(ed_mainRenderer, &collisionRect);
+}
+
 void ed_Scene::execute()
 {
 	ed_globalScene = this;
 
 	//initialize
+
 	ed_globalScene->setTexturePositions();
+
 	ed_globalScene->initThreads();
-	ed_globalScene->customInit();
+
+	if (ed_globalScene->customInit != NULL) {
+		ed_globalScene->customInit();
+	}
 	
 	const int fps = 60;
 
@@ -257,6 +271,8 @@ void ed_Scene::execute()
 			SDL_RenderCopy(ed_mainRenderer, texture.sheets[texture.sheetIndex][texture.textureIndex], NULL,
 				&texture.renderGroups[texture.sheetIndex][texture.textureIndex]);
 		}
+
+		renderCollisionBoxs(&c_Player);
 
 		ed_globalScene->render();
 

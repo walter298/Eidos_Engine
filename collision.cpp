@@ -70,7 +70,8 @@ void ed_checkPlayerCollision()
 
 		while (true) {
 			if (c_Player.getCollisionBox().y2 >= currentSurface.y1) {
-				c_Player.setPos(c_Player.getCollisionBox().centerX, currentSurface.y1);
+				c_Player.setPos(c_Player.getCollisionBox().centerX, currentSurface.y1 - 
+					(c_Player.getCollisionBox().y2 - c_Player.getCollisionBox().centerY));
 
 				break;
 			}
@@ -82,7 +83,7 @@ void ed_checkPlayerCollision()
 				c_Player.camMove(ed_Dir::NONE, ed_Dir::DOWN);
 			}
 
-			SDL_Delay(5);
+			SDL_Delay(10);
 		}
 	}
 }

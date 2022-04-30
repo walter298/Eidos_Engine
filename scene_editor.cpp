@@ -1,8 +1,7 @@
 #include "scene_editor.h"
 
-void renderCollisionBox(ed_RenderObject* s) {
-	SDL_Rect collisionRect = { s->getCollisionBox().x1, s->getCollisionBox().y1, 
-		s->getCollisionBox().x2 - s->getCollisionBox().x1, s->getCollisionBox().y2 - s->getCollisionBox().y1 };
+void renderCollisionBox(ed_Surface s) {
+	SDL_Rect collisionRect = { s.x1, s.y1, s.x2 - s.x1, s.y2 - s.y1 };
 
 	SDL_RenderDrawRect(ed_mainRenderer, &collisionRect);
 }
@@ -41,7 +40,11 @@ void ed_SceneEditor::editScene()
 		}
 
 		for (ed_RenderObject *r : allRenderObjects) {
-			renderCollisionBox(r);
+			renderCollisionBox(r->getCollisionBox());
+		}
+
+		for (ed_Surface& s : scene->surfaces) {
+			renderCollisionBox(s);
 		}
 
 		scene->render();

@@ -31,15 +31,6 @@ public:
 
 	std::vector<ed_Button> buttons;
 
-	void printData()
-	{
-		std::cout << backgrounds.size() << " backgrounds\n";
-		std::cout << foregroundObjects.size() << " foreground objects\n";
-		std::cout << backgroundMethods.size() << " background methods\n";
-		std::cout << surfaces.size() << " surfaces\n";
-		std::cout << buttons.size() << " buttons\n";
-	}
-
 	int pX = 0, pY = 0;
 
 	void execute();
@@ -52,7 +43,7 @@ public:
 
 	void ed_scaleScene(ed_Scene& scene);
 
-	void(*customInit)() = {};
+	void(*customInit)() = NULL;
 
 	friend class ed_SceneEditor;
 };
