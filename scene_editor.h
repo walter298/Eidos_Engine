@@ -1,4 +1,7 @@
+#include <filesystem>
+
 #include "scene.h"
+#include "key_input.h"
 
 class ed_SceneEditor {
 private:
@@ -6,6 +9,18 @@ private:
 	std::string path;
 
 	std::vector<ed_RenderObject*> allRenderObjects;
+
+	void getSelectedSurface();
+	void editSurface();
+
+	void getSelectedObject();
+	void editObject();
+
+	void getInput();
+
+	void save();
+
+	bool hasPlayer = false;
 public:
 	void editScene();
 
@@ -19,5 +34,7 @@ public:
 		if (containsPlayer) {
 			allRenderObjects.push_back(&c_Player);
 		}
+
+		hasPlayer = containsPlayer;
 	}
 };

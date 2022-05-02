@@ -25,8 +25,6 @@ public:
 
 	std::vector<void(*)()> backgroundMethods;
 
-	std::vector<ed_RenderObject> NPCS;
-
 	std::vector<ed_Surface> surfaces;
 
 	std::vector<ed_Button> buttons;

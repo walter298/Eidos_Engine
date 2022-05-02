@@ -38,3 +38,19 @@ void printTwo(int x, int y)
 {
 	std::cout << x << ", " << y << std::endl;
 }
+
+std::string ed_writeNums(std::vector<int> nums) {
+	std::string s;
+
+	for (size_t i = 0; i < nums.size(); i++) {
+		s.append(std::to_string(nums[i]));
+
+		if (i != nums.size() - 1) {
+			s.append("_");
+		}
+	}
+
+	std::cout << "returning " << s << std::endl;
+
+	return s;
+}

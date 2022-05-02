@@ -199,10 +199,10 @@ void ed_Scene::readData(std::string fileName)
 			this->surfaces.push_back(newFloor);
 		} else {
 			std::cout << "Error. Unknown object: " << dataPiece[0] << std::endl;
-
-			return;
 		}
 	}
+
+	file.close();
 }
 
 void renderCollisionBoxs(ed_RenderObject* s) {

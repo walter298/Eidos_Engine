@@ -47,6 +47,7 @@ enum class ed_Dir {
 
 class ed_Scene; 
 class ed_RenderObjectCreator;
+class ed_SceneEditor;
 
 class ed_RenderObject {
 private:
@@ -222,6 +223,18 @@ public:
 				renderGroups[i][j].y += distY;
 			}
 		}
+
+		for (std::vector<ed_Surface>& sv : collisionGroups) {
+			for (ed_Surface& s : sv) {
+				s.x1 += distX;
+				s.x2 += distX;
+				s.centerX += distX;
+
+				s.y1 += distY;
+				s.y2 += distY;
+				s.centerY += distY;
+			}
+		}
 	}
 
 	void changeTexture(size_t sheetIndex, size_t textureIndex) 
@@ -320,6 +333,7 @@ public:
 
 	friend class ed_Scene;
 	friend class ed_RenderObjectCreator;
+	friend class ed_SceneEditor;
 
 	Uint32 ID = 0;
 };
