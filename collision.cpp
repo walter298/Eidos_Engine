@@ -81,6 +81,8 @@ void ed_checkPlayerCollision()
 
 			if (!c_Player.yCamLocked) {
 				c_Player.camMove(ed_Dir::NONE, ed_Dir::DOWN);
+			} else {
+				ed_globalScene->moveCam(0, -c_Player.getDeltaCamY());
 			}
 
 			SDL_Delay(10);

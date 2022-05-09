@@ -10,6 +10,14 @@ private:
 
 	std::vector<ed_RenderObject*> allRenderObjects;
 
+	void checkCamMovement();
+
+	void drawRect(int& x1, int& y1, int& x2, int& y2);
+
+	void injectSurface();
+
+	void injectCamLockState();
+
 	void getSelectedSurface();
 	void editSurface();
 

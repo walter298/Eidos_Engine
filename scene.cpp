@@ -98,7 +98,21 @@ void ed_Scene::parseBackgroundImage(std::vector<std::string> input)
 			continue;
 		}
 
+		std::string pos;
+
 		std::string imagePath = input[i];
+
+		for (int i = imagePath.size() - 1; i >= 0; i--) {
+			if (imagePath[i] == '@') {
+				imagePath.erase(imagePath.begin() + i);
+				break;
+			}
+
+			pos.insert(pos.begin(), imagePath[i]);
+			imagePath.erase(imagePath.begin() + i);
+		}
+
+		std::vector<int> posNums = ed_parseNums(pos);
 
 		ed_RenderObject background;
 
@@ -109,7 +123,7 @@ void ed_Scene::parseBackgroundImage(std::vector<std::string> input)
 
 		int backgroundIndex = this->backgrounds.size();
 
-		background.renderGroups[0][0] = { 1920 * backgroundIndex, 0, 1920, 1080 };
+		background.renderGroups[0][0] = { 1920 * posNums[0], 1080 * posNums[1], 1920, 1080 };
 
 		this->backgrounds.push_back(background);
 	}
@@ -183,7 +197,8 @@ void ed_Scene::readData(std::string fileName)
 			this->pY = y;
 
 			//c_Player.tex.updateToPosition(0, 0, x, y);
-		} else if (dataPiece[0] == "FLOOR") {
+		}
+		else if (dataPiece[0] == "FLOOR") {
 			ed_Surface newFloor;
 
 			std::vector<int> lengthPeriod = ed_parseNums(dataPiece[1]);
@@ -197,6 +212,13 @@ void ed_Scene::readData(std::string fileName)
 			newFloor.y2 = heightPeriod[1];
 
 			this->surfaces.push_back(newFloor);
+		} else if (dataPiece[0] == "CAMERA_LOCK") {
+			ed_CamLockState state;
+
+			std::vector<int> nums = ed_parseNums(dataPiece[1]);
+			state = ed_CamLockState(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]);
+
+			camLocks.push_back(state);
 		} else {
 			std::cout << "Error. Unknown object: " << dataPiece[0] << std::endl;
 		}
@@ -206,12 +228,24 @@ void ed_Scene::readData(std::string fileName)
 }
 
 void renderCollisionBoxs(ed_RenderObject* s) {
-	//std::cout << s->getCollisionBox().x1 << ", " << s->getCollisionBox().x2 << std::endl;
-
 	SDL_Rect collisionRect = { s->getCollisionBox().x1, s->getCollisionBox().y1,
 		s->getCollisionBox().x2 - s->getCollisionBox().x1, s->getCollisionBox().y2 - s->getCollisionBox().y1 };
 
 	SDL_RenderDrawRect(ed_mainRenderer, &collisionRect);
+}
+
+
+void ed_Scene::moveCam(int deltaX, int deltaY) 
+{
+	for (ed_RenderObject& b : backgrounds) {
+		b.renderGroups[b.getSheetIndex()][b.getTextureIndex()].x += deltaX;
+		b.renderGroups[b.getSheetIndex()][b.getTextureIndex()].y += deltaY;
+	}
+
+	for (ed_RenderObject& r : foregroundObjects) {
+		r.renderGroups[r.getSheetIndex()][r.getTextureIndex()].x += deltaX;
+		r.renderGroups[r.getSheetIndex()][r.getTextureIndex()].y += deltaY;
+	}
 }
 
 void ed_Scene::execute()
@@ -240,8 +274,6 @@ void ed_Scene::execute()
 		t.detach();
 	}
 
-	std::cout << "background methods: " << ed_runningThreads.size() << std::endl;
-
 	const Uint8* mainKey = SDL_GetKeyboardState(NULL); //handles main inputs like quitting the game
 
 	int waitTime;
@@ -260,6 +292,7 @@ void ed_Scene::execute()
 
 		waitTime = 1000 / fps;
 		endTime = SDL_GetTicks() + waitTime;
+		
 
 		//render backgrounds
 		for (ed_RenderObject& background : ed_globalScene->backgrounds) {
@@ -272,7 +305,7 @@ void ed_Scene::execute()
 				&texture.renderGroups[texture.sheetIndex][texture.textureIndex]);
 		}
 
-		renderCollisionBoxs(&c_Player);
+		//renderCollisionBoxs(&c_Player);
 
 		ed_globalScene->render();
 

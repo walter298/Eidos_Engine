@@ -9,5 +9,7 @@ protected:
 	void render() override;
 
 	void setTexturePositions() override;
-	void initThreads() override {};
+	void initThreads() override;
+
+	void updateSceneCamLockState();
 };

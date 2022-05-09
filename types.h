@@ -9,21 +9,10 @@
 #include "rendering.h"
 
 class ed_Surface {
-	//int iCX = 0, iCY = 0;
 public:
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
 	int centerX = 0, centerY = 0;
-
-	/*int getICX()
-	{
-		return iCX;
-	}
-
-	int getICY()
-	{
-		return iCY;
-	}*/
 };
 
 class ed_Button {

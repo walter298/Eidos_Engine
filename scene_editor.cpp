@@ -7,6 +7,8 @@ bool selectingSurface = false;
 ed_Surface* editedRect;
 ed_RenderObject* obj;
 
+int deltaCamX = 0, deltaCamY = 0;
+
 void ed_SceneEditor::save()
 {
 	std::cout << "Saving...\n";
@@ -58,7 +60,6 @@ void ed_SceneEditor::save()
 	int nDataCount = 0;
 
 	if (hasPlayer) {
-
 		newData.push_back({});
 
 		newData[nDataCount].push_back("PLAYER_PLACEMENT");
@@ -80,6 +81,23 @@ void ed_SceneEditor::save()
 
 			newData[nDataCount].push_back(line1);
 			newData[nDataCount].push_back(line2);
+
+			newData[nDataCount].push_back("end");
+		}
+
+		nDataCount++;
+	}
+
+	if (scene->camLocks.size() > 0) {
+		newData.push_back({});
+
+		for (ed_CamLockState& c : scene->camLocks) {
+			newData[nDataCount].push_back("CAMERA_LOCK");
+
+			std::string nums = ed_writeNums({c.getX1(), c.getY1(), c.getX2(), c.getY2(), c.getXLocked(), c.getYLocked()});
+			newData[nDataCount].push_back(nums);
+
+			newData[nDataCount].push_back("end");
 		}
 	}
 
@@ -87,7 +105,6 @@ void ed_SceneEditor::save()
 
 	std::cout << "Carried over data:\n";
 	for (std::vector<std::string> &sv : unchangedData) {
-
 		newFile << std::endl;
 		for (std::string& s : sv) {
 			std::cout << "writing old data " << s << std::endl;
@@ -111,12 +128,14 @@ void ed_SceneEditor::save()
 
 void ed_SceneEditor::getSelectedSurface()
 {
+	doneWithInputThread = false;
+
 	size_t rectIndex = 0;
 
 	while (!doneWithInputThread) {
 		if (SDL_PollEvent(&ed_input)) {
 			if (ed_input.type == SDL_KEYDOWN) {
-				if (ed_keyState[SDL_SCANCODE_UP]) {
+				if (ed_keyState[SDL_SCANCODE_C]) {
 					if (rectIndex + 1 == scene->surfaces.size()) {
 						rectIndex = 0;
 					}
@@ -131,20 +150,28 @@ void ed_SceneEditor::getSelectedSurface()
 	}
 }
 
-void moveRectHr(ed_Surface* rect) {
-	rect->x1 += 1;
-	rect->x2 += 1;
-	rect->centerX += 1;
+void moveRectHr(ed_Surface* rect, int dir) {
+	rect->x1 += 4 * dir;
+	rect->x2 += 4 * dir;
+	rect->centerX += 4 * dir;
 }
 
-void moveRectVr(ed_Surface* rect) {
-	rect->y1 += 1;
-	rect->y2 += 1;
-	rect->centerY += 1;
+void moveRectVr(ed_Surface* rect, int dir) {
+	rect->y1 += 4 * dir;
+	rect->y2 += 4 * dir;
+	rect->centerY += 4 * dir;
+}
+
+void changeSurfaceSize(ed_Surface* s, int deltaX, int deltaY)
+{
+	s->x2 += deltaX;
+	s->y2 += deltaY;
 }
 
 void ed_SceneEditor::editSurface()
 {
+	doneWithInputThread = false;
+
 	editedRect = &scene->surfaces[0];
 
 	selectingSurface = true;
@@ -156,19 +183,29 @@ void ed_SceneEditor::editSurface()
 		if (SDL_PollEvent(&ed_input)) {
 			if (ed_input.type == SDL_KEYDOWN) {
 				if (ed_keyState[SDL_SCANCODE_W]) {
-					moveRectVr(editedRect);
+					moveRectVr(editedRect, -1);
 
-					SDL_Delay(10);
+					SDL_Delay(1);
+				} else if (ed_keyState[SDL_SCANCODE_S]) {
+					moveRectVr(editedRect, 1);
+				} else if (ed_keyState[SDL_SCANCODE_RIGHT]) {
+					changeSurfaceSize(editedRect, 4, 0);
+				} else if (ed_keyState[SDL_SCANCODE_LEFT]) {
+					changeSurfaceSize(editedRect, -4, 0);
+				} else if (ed_keyState[SDL_SCANCODE_DOWN]) {
+					changeSurfaceSize(editedRect, 0, 4);
+				} else if (ed_keyState[SDL_SCANCODE_UP]) {
+					changeSurfaceSize(editedRect, 0, -4);
 				}
 			}
 		}
  	}
-
-	selectingSurface = false;
 }
 
 void ed_SceneEditor::editObject()
 {
+	doneWithInputThread = false;
+
 	obj = allRenderObjects[0];
 
 	std::thread t(&ed_SceneEditor::getSelectedObject, this);
@@ -188,7 +225,7 @@ void ed_SceneEditor::editObject()
 
 					obj = allRenderObjects[objectIndex];
 
-					SDL_Delay(5);
+					SDL_Delay(1);
 				}
 			}
 		}
@@ -209,6 +246,146 @@ void ed_SceneEditor::getSelectedObject()
 	}
 }
 
+void ed_SceneEditor::checkCamMovement()
+{
+	doneWithInputThread = false;
+
+	while (!doneWithInputThread) {
+		if (SDL_PollEvent(&ed_input)) {
+			if (ed_input.type == SDL_KEYDOWN) {
+				int dCX = 0, dCY = 0;
+
+				int keyPressed = 0, deltaX = 0, deltaY = 0;
+
+				if (ed_keyState[ED_ARROW_RIGHT]) {
+					keyPressed = ED_ARROW_RIGHT;
+
+					deltaX = -10;
+					dCX = 10;
+				} else if (ed_keyState[ED_ARROW_LEFT]) {
+					keyPressed = ED_ARROW_LEFT;
+					deltaX = 10;
+					dCX = -10;
+				} else if (ed_keyState[ED_ARROW_DOWN]) {
+					keyPressed = ED_ARROW_DOWN;
+					deltaY = -10;
+					dCY = 10;
+				} else if (ed_keyState[ED_ARROW_UP]) {
+					keyPressed = ED_ARROW_UP;
+					deltaY = 10;
+					dCY = -10;
+				} else {
+					std::cout << "Error: invalid key is pressed\n";
+
+					return;
+				}
+
+				while (true) {
+					if (!ed_keyState[keyPressed]) {
+						break;
+					}
+
+					deltaCamX += dCX;
+					deltaCamY += dCY;
+
+					std::cout << "deltaCamX: " << deltaCamX << std::endl;
+					std::cout << "deltaCamY: " << deltaCamY << std::endl;
+
+					scene->moveCam(deltaX, deltaY);
+					
+
+					SDL_Delay(10);
+				}
+			}
+		}
+	}
+}
+
+void getMouseXY(int& x, int& y)
+{
+	
+	while (true) {
+		if (SDL_PollEvent(&ed_input)) {
+			if (ed_input.type == SDL_MOUSEBUTTONDOWN) {
+				SDL_GetMouseState(&x, &y);
+				std::cout << "mouse click: " << x << ", " << y << std::endl;
+				
+				break;
+			}
+		}
+	}
+
+}
+
+void ed_SceneEditor::drawRect(int& x1, int& y1, int& x2, int& y2)
+{
+	bool sec = false;
+
+	std::cout << "click on x1 and y1\n";
+
+	getMouseXY(x1, y1);
+	getMouseXY(x2, y2);
+
+	/*while (true) {
+		if (SDL_PollEvent(&ed_input)) {
+			if (ed_input.type == SDL_MOUSEBUTTONDOWN && !sec) {
+				SDL_GetMouseState(&x1, &y1);
+				std::cout << "click on x2 and y2\n";
+
+				sec = true;
+			} else if (ed_input.type == SDL_MOUSEBUTTONDOWN && sec) {
+				
+				SDL_GetMouseState(&x2, &y2);
+
+				break;
+			}
+		}
+	}*/
+
+	std::cout << "injected surface\n";
+
+	std::cout << "deltas\n";
+	printTwo(deltaCamX, deltaCamY);
+
+	//adjust for camera moving
+	x1 += deltaCamX;
+	x2 += deltaCamX;
+	y1 += deltaCamY;
+	y2 += deltaCamY;
+}
+
+void ed_SceneEditor::injectSurface()
+{
+	int x1, y1, x2, y2;
+
+	drawRect(x1, y1, x2, y2);
+
+	std::cout << "New Surface: \n";
+	printTwo(x1, y1);
+	printTwo(x2, y2);
+
+	scene->surfaces.push_back({x1, y1, x2, y2});
+}
+
+void ed_SceneEditor::injectCamLockState()
+{
+	int x1, y1, x2, y2;
+
+	drawRect(x1, y1, x2, y2);
+
+	bool x, y;
+
+	std::cout << "enter x locked boolean\n";
+	std::cin >> x;
+
+	std::cout << "enter y locked boolean\n";
+	std::cin >> y;
+
+	ed_CamLockState state(x1, y1, x2, y2, x, y);
+
+	scene->camLocks.push_back(state);
+}
+
 void ed_SceneEditor::getInput()
 {
 	std::thread currentThread;
@@ -218,7 +395,7 @@ void ed_SceneEditor::getInput()
 	while (ed_running) {
 		std::cin >> command;
 
-		doneWithInputThread = false;
+		doneWithInputThread = true;
 
 		if (command == "edit_surface") {
 			currentThread = std::thread(&ed_SceneEditor::editSurface, this);
@@ -226,6 +403,15 @@ void ed_SceneEditor::getInput()
 		} else if (command == "move_object") {
 			currentThread = std::thread(&ed_SceneEditor::editObject, this);
 			currentThread.detach();
+		}
+		else if (command == "move_cam") {
+			currentThread = std::thread(&ed_SceneEditor::checkCamMovement, this);
+			currentThread.detach();
+		}
+		else if (command == "inject_surface") {
+			this->injectSurface();
+		} else if (command == "add_camlock") {
+			injectCamLockState();
 		} else if (command == "save_exit") {
 			save();
 			ed_running = false;
@@ -236,7 +422,11 @@ void ed_SceneEditor::getInput()
 }
 
 void renderCollisionBox(ed_Surface* s) {
-	SDL_Rect collisionRect = { s->x1, s->y1, s->x2 - s->x1, s->y2 - s->y1 };
+	SDL_Rect collisionRect = { 
+		s->x1 - deltaCamX, 
+		s->y1 - deltaCamY, 
+		s->x2 - s->x1, 
+		s->y2 - s->y1 };
 
 	SDL_RenderDrawRect(ed_mainRenderer, &collisionRect);
 }
@@ -267,6 +457,8 @@ void ed_SceneEditor::editScene()
 
 		SDL_RenderClear(ed_mainRenderer);
 
+		SDL_SetRenderDrawColor(ed_mainRenderer, 255, 255, 255, 255);
+
 		//render backgrounds
 		for (ed_RenderObject& background : scene->backgrounds) {
 			SDL_RenderCopy(ed_mainRenderer, background.getCurrentTexture(), NULL, background.getTextureBox());
@@ -277,12 +469,8 @@ void ed_SceneEditor::editScene()
 			SDL_RenderCopy(ed_mainRenderer, texture.getCurrentTexture(), NULL, texture.getTextureBox());
 		}
 
-		for (ed_RenderObject *r : allRenderObjects) {
-			//renderCollisionBox(&r->getCollisionBox());
-		}
-
-		if (selectingSurface) {
-			renderCollisionBox(editedRect);
+		for (ed_Surface& s : scene->surfaces) {
+			renderCollisionBox(&s);
 		}
 
 		scene->render();
