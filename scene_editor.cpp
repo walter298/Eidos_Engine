@@ -4,7 +4,7 @@ bool doneWithInputThread;
 
 bool selectingSurface = false;
 
-ed_Surface* editedRect;
+ed_Surface* editedSurface;
 ed_RenderObject* obj;
 
 int deltaCamX = 0, deltaCamY = 0;
@@ -13,7 +13,8 @@ void ed_SceneEditor::save()
 {
 	std::cout << "Saving...\n";
 
-	std::vector<std::vector<std::string>> unchangedData, newData;
+	std::vector<std::string> backgroundImageData;
+	std::vector<std::vector<std::string>> newData;
 
 	std::string line;
 
@@ -22,37 +23,38 @@ void ed_SceneEditor::save()
 
 	int dataCount = -1;
 
-	bool writingUnchangedData = false;
+	bool writingBackgroundImageData = false;
 
-	//get unchanged data
+	//get background image data
 	while (std::getline(levelFile, line)) {
-		if (line.empty()) {
+		if (line.empty()) { //ignore empty lines
 			continue;
 		}
 
 		if (line == "end") {
-			writingUnchangedData = false;
+			writingBackgroundImageData = false;
 
-			continue;
+			break;
 		}
 
-		if (writingUnchangedData) {
-			unchangedData[dataCount].push_back(line);
+		if (writingBackgroundImageData) {
+			backgroundImageData.push_back(line);
 
 			continue;
 		}
 
 		if (line == "BACKGROUND_IMAGES") {
-			writingUnchangedData = true;
+			writingBackgroundImageData = true;
 
 			dataCount++;
-			unchangedData.push_back({});
 
-			unchangedData[dataCount].push_back(line);
+			backgroundImageData.push_back(line);
 
 			continue;
 		}
 	}
+
+	backgroundImageData.push_back("end");
 
 	levelFile.close();
 	std::remove(path.c_str());
@@ -66,6 +68,8 @@ void ed_SceneEditor::save()
 
 		std::string placement = ed_writeNums({ c_Player.getCollisionBox().centerX, c_Player.getCollisionBox().centerY });
 		newData[nDataCount].push_back(placement);
+
+		newData[nDataCount].push_back("end");
 
 		nDataCount++;
 	}
@@ -103,15 +107,9 @@ void ed_SceneEditor::save()
 
 	std::ofstream newFile(path);
 
-	std::cout << "Carried over data:\n";
-	for (std::vector<std::string> &sv : unchangedData) {
-		newFile << std::endl;
-		for (std::string& s : sv) {
-			std::cout << "writing old data " << s << std::endl;
-			newFile << s << std::endl;
-		}
-
-		newFile << "end\n";
+	//write old data
+	for (std::string &s : backgroundImageData) {
+		newFile << s << std::endl;
 	}
 
 	for (std::vector<std::string>& sv : newData) {
@@ -119,8 +117,6 @@ void ed_SceneEditor::save()
 		for (std::string& s : sv) {
 			newFile << s << std::endl;
 		}
-
-		newFile << "end\n";
 	}
 
 	newFile.close();
@@ -130,24 +126,29 @@ void ed_SceneEditor::getSelectedSurface()
 {
 	doneWithInputThread = false;
 
+	selectingSurface = true;
+
 	size_t rectIndex = 0;
 
 	while (!doneWithInputThread) {
-		if (SDL_PollEvent(&ed_input)) {
+		while (SDL_PollEvent(&ed_input)) {
 			if (ed_input.type == SDL_KEYDOWN) {
 				if (ed_keyState[SDL_SCANCODE_C]) {
 					if (rectIndex + 1 == scene->surfaces.size()) {
 						rectIndex = 0;
-					}
-					else {
+					} else {
 						rectIndex++;
 					}
 
-					editedRect = &scene->surfaces[rectIndex];
+					std::cout << "selected " << rectIndex << "th surface\n";
+
+					editedSurface = &scene->surfaces[rectIndex];
 				}
 			}
 		}
 	}
+
+	selectingSurface = false;
 }
 
 void moveRectHr(ed_Surface* rect, int dir) {
@@ -172,7 +173,7 @@ void ed_SceneEditor::editSurface()
 {
 	doneWithInputThread = false;
 
-	editedRect = &scene->surfaces[0];
+	editedSurface = &scene->surfaces[0];
 
 	selectingSurface = true;
 
@@ -180,29 +181,31 @@ void ed_SceneEditor::editSurface()
 	selectedSurface.detach();
 
 	while (!doneWithInputThread) {
-		if (SDL_PollEvent(&ed_input)) {
+		while (SDL_PollEvent(&ed_input)) {
 			if (ed_input.type == SDL_KEYDOWN) {
-				if (ed_keyState[SDL_SCANCODE_W]) {
-					moveRectVr(editedRect, -1);
-
-					SDL_Delay(1);
-				} else if (ed_keyState[SDL_SCANCODE_S]) {
-					moveRectVr(editedRect, 1);
+				if (ed_keyState[SDL_SCANCODE_S]) {
+					moveRectVr(editedSurface, 1);
+				} else if (ed_keyState[SDL_SCANCODE_W]) {
+					moveRectVr(editedSurface, -1);
+				} else if (ed_keyState[SDL_SCANCODE_A]) {
+					moveRectHr(editedSurface, -1);
+				} else if (ed_keyState[SDL_SCANCODE_D]) {
+					moveRectHr(editedSurface, 1);
 				} else if (ed_keyState[SDL_SCANCODE_RIGHT]) {
-					changeSurfaceSize(editedRect, 4, 0);
+					changeSurfaceSize(editedSurface, 4, 0);
 				} else if (ed_keyState[SDL_SCANCODE_LEFT]) {
-					changeSurfaceSize(editedRect, -4, 0);
+					changeSurfaceSize(editedSurface, -4, 0);
 				} else if (ed_keyState[SDL_SCANCODE_DOWN]) {
-					changeSurfaceSize(editedRect, 0, 4);
+					changeSurfaceSize(editedSurface, 0, 4);
 				} else if (ed_keyState[SDL_SCANCODE_UP]) {
-					changeSurfaceSize(editedRect, 0, -4);
+					changeSurfaceSize(editedSurface, 0, -4);
 				}
 			}
 		}
  	}
 }
 
-void ed_SceneEditor::editObject()
+void ed_SceneEditor::getSelectedObject()
 {
 	doneWithInputThread = false;
 
@@ -232,7 +235,7 @@ void ed_SceneEditor::editObject()
 	}
 }
 
-void ed_SceneEditor::getSelectedObject()
+void ed_SceneEditor::editObject()
 {
 	while (!doneWithInputThread) {
 		if (SDL_PollEvent(&ed_input)) {
@@ -326,22 +329,6 @@ void ed_SceneEditor::drawRect(int& x1, int& y1, int& x2, int& y2)
 	getMouseXY(x1, y1);
 	getMouseXY(x2, y2);
 
-	/*while (true) {
-		if (SDL_PollEvent(&ed_input)) {
-			if (ed_input.type == SDL_MOUSEBUTTONDOWN && !sec) {
-				SDL_GetMouseState(&x1, &y1);
-				std::cout << "click on x2 and y2\n";
-
-				sec = true;
-			} else if (ed_input.type == SDL_MOUSEBUTTONDOWN && sec) {
-				
-				SDL_GetMouseState(&x2, &y2);
-
-				break;
-			}
-		}
-	}*/
-
 	std::cout << "injected surface\n";
 
 	std::cout << "deltas\n";
@@ -410,8 +397,11 @@ void ed_SceneEditor::getInput()
 		}
 		else if (command == "inject_surface") {
 			this->injectSurface();
-		} else if (command == "add_camlock") {
+		}
+		else if (command == "add_camlock") {
 			injectCamLockState();
+		} else if (command == "add_render_object") {
+
 		} else if (command == "save_exit") {
 			save();
 			ed_running = false;
@@ -469,8 +459,12 @@ void ed_SceneEditor::editScene()
 			SDL_RenderCopy(ed_mainRenderer, texture.getCurrentTexture(), NULL, texture.getTextureBox());
 		}
 
-		for (ed_Surface& s : scene->surfaces) {
-			renderCollisionBox(&s);
+		if (!selectingSurface) {
+			for (ed_Surface& s : scene->surfaces) {
+				renderCollisionBox(&s);
+			}
+		} else {
+			renderCollisionBox(editedSurface);
 		}
 
 		scene->render();

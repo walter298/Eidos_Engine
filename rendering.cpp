@@ -9,3 +9,4 @@ int ed_scaledWindowWidth;
 int ed_scaledWindowHeight;
 
 extern SDL_Renderer* ed_mainRenderer = SDL_CreateRenderer(ed_mainWindow, -1, SDL_RENDERER_ACCELERATED);
+

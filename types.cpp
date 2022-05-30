@@ -14,29 +14,8 @@ bool ed_Button::hovered()
 	return false;
 }
 
-void ed_Player::jump() {
-	int jumpTime = SDL_GetTicks() + 100;
-
-	int jumpInterval = SDL_GetTicks() + 5;
-
-	this->jumping = true;
-
-	while (true) {
-		if (SDL_GetTicks() == jumpTime) {
-			this->jumping = false;
-
-			break;
-		}
-
-		if (SDL_GetTicks() == jumpInterval) {
-			jumpInterval += 5;
-
-			this->worldMove(ed_Dir::NONE, ed_Dir::UP);
-
-			if (!this->yCamLocked) {
-				this->camMove(ed_Dir::NONE, ed_Dir::UP);
-			}
-		}
-	}
+void ed_printSurface(ed_Surface& s)
+{
+	std::cout << "x1: " << s.x1 << ", " << "y1: " << s.y1 << std::endl;
+	std::cout << "x2: " << s.x2 << ", " << "y2: " << s.y2 << std::endl;
 }
-

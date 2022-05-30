@@ -292,7 +292,6 @@ void ed_Scene::execute()
 
 		waitTime = 1000 / fps;
 		endTime = SDL_GetTicks() + waitTime;
-		
 
 		//render backgrounds
 		for (ed_RenderObject& background : ed_globalScene->backgrounds) {

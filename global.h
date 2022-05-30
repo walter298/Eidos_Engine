@@ -11,3 +11,4 @@ extern SDL_Event ed_input;
 extern const Uint8* ed_keyState;
 
 extern std::vector<std::thread> ed_runningThreads;
+

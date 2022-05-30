@@ -2,11 +2,13 @@
 #define COLLISION
 
 #include <thread>
+#include <mutex>
 
 #include "scene.h"
 
-void ed_updateSurfaceBelowPlayer();
+#define NEAREST_FLOOR getNearestFloor(&obj)
+#define OBJ_FLOOR obj.surfaceBelow
 
-void ed_checkPlayerCollision();
+void ed_checkObjectCollision(ed_AnimateObject& obj);
 
 #endif

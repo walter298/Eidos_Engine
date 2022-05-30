@@ -293,7 +293,7 @@ void ed_RenderObjectCreator::checkModeChange()
 	}
 }
 
-void ed_RenderObjectCreator::putCollisionData()
+void ed_RenderObjectCreator::writeData()
 {
 	textureFile.open(this->path.c_str(), std::ios::app);
 

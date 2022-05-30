@@ -6,8 +6,8 @@ ed_Surface getNearestFloor(ed_RenderObject* obj)
 
 	for (const ed_Surface& surface : ed_globalScene->surfaces)
 	{
-		if (surface.x1 < obj->getCollisionBox().x1 && 
-			surface.x2 > obj->getCollisionBox().x2 && 
+		if ((surface.x1 <= obj->getCollisionBox().x1 && 
+			surface.x2 >= obj->getCollisionBox().x2) && 
 			surface.y1 >= obj->getCollisionBox().y2) 
 		{
 			surfacesBelow.push_back(surface);
@@ -17,25 +17,25 @@ ed_Surface getNearestFloor(ed_RenderObject* obj)
 	ed_Surface highestFloor;
 	highestFloor = { 0, 7000, 5000, 0, 0, 0 };
 
-	for (const ed_Surface& surface : surfacesBelow) {
+	for (ed_Surface& surface : surfacesBelow) {
 		if (surface.y1 < highestFloor.y1) {
 			highestFloor = surface;
-		}
+		} 
 	}
 
 	return highestFloor;
 }
 
-void ed_updateSurfaceBelowPlayer()
+void updateGround(ed_AnimateObject& obj, bool& updating)
 {
 	while (ed_running) {
-		c_Player.surfaceBelow = getNearestFloor(&c_Player);
-
-		SDL_Delay(20);
+		if (NEAREST_FLOOR != obj.surfaceBelow) {
+			updating = true;
+		}
 	}
 }
 
-ed_Surface getNearestWall(ed_RenderObject tex)
+ed_Surface getNearestWall(ed_RenderObject* tex)
 {
 	return {};
 }
@@ -47,47 +47,69 @@ void updateNearestWall()
 	}
 }
 
-void ed_checkPlayerCollision()
+void ed_checkObjectCollision(ed_AnimateObject& obj)
 {
-	std::thread updateSurfaceBelow(ed_updateSurfaceBelowPlayer);
+	bool updating = false;
+	bool accessing = false;
+
+	std::thread updateSurfaceBelow(updateGround, std::ref(obj), std::ref(updating));
 	updateSurfaceBelow.detach();
-	 
-	ed_Surface currentSurface; //used so we are not constantly accessing updating texture
+
+	obj.surfaceBelow = NEAREST_FLOOR;
 
 	while (ed_running) 
 	{
-		//if we are jumping than we don't check for gravity
-		if (c_Player.jumping) {
+		//update floor
+		if (updating) {
+			obj.surfaceBelow = NEAREST_FLOOR;
+
+			updating = false;
+		}
+
+		//if we are jumping, floating, etc
+		if (obj.traveling) {
 			continue;
 		}
 
-		currentSurface = getNearestFloor(&c_Player);
-
-		//if we already are ground we don't check for gravity
-		if (c_Player.getCollisionBox().y2 == currentSurface.y1) {
+		//if we are already on the ground 
+		if (obj.getY2() == obj.surfaceBelow.y1) {
 			continue;
-		}
+		} 
+
+		//enter freefall until we hit ground
+		obj.falling = true;
 
 		while (true) {
-			if (c_Player.getCollisionBox().y2 >= currentSurface.y1) {
-				c_Player.setPos(c_Player.getCollisionBox().centerX, currentSurface.y1 - 
-					(c_Player.getCollisionBox().y2 - c_Player.getCollisionBox().centerY));
+			ed_Surface s = obj.surfaceBelow;
+
+			//fall
+			obj.worldMove(ed_Dir::NONE, ed_Dir::DOWN);
+
+			if (!obj.yCamLocked) {
+				obj.camMove(ed_Dir::NONE, ed_Dir::DOWN);
+			} else {
+				ed_globalScene->moveCam(0, -obj.getDeltaCamY());
+			}
+
+			//if we have hit or passed the ground set object to be surface level
+			if (obj.getY2() >= s.y1) { 
+				obj.setPos(obj.getCX(), s.y1 - (obj.getY2() - obj.getCY()));
 
 				break;
 			}
 
-			//fall 
-			c_Player.worldMove(ed_Dir::NONE, ed_Dir::DOWN);
+			//if surface below object has changed, update it
+			if (updating) {
+				obj.surfaceBelow = NEAREST_FLOOR;
 
-			if (!c_Player.yCamLocked) {
-				c_Player.camMove(ed_Dir::NONE, ed_Dir::DOWN);
-			} else {
-				ed_globalScene->moveCam(0, -c_Player.getDeltaCamY());
+				updating = false;
 			}
 
 			SDL_Delay(10);
 		}
-	}
+
+		obj.falling = false;
+ 	}
 }
 
 void updateVerticalPlayerMovement()

@@ -22,7 +22,7 @@ public:
 
 	void readData();
 
-	void putCollisionData();
+	void writeData();
 };
 
 #endif

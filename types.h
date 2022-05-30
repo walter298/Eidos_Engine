@@ -7,13 +7,39 @@
 #include <stdarg.h>
 
 #include "rendering.h"
+#include "object_id_defs.h"
 
 class ed_Surface {
 public:
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
 	int centerX = 0, centerY = 0;
+
+	//checking equivalence
+	bool operator == (const ed_Surface& s)
+	{
+		if (this->x1 == s.x1 && this->y1 == s.y1 &&
+			this->x2 == s.x2 && this->y2 == s.y2) 
+		{
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	bool operator != (const ed_Surface& s) {
+		if (this->x1 == s.x1 && this->y1 == s.y1 &&
+			this->x2 == s.x2 && this->y2 == s.y2)
+		{
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
 };
+
+void ed_printSurface(ed_Surface& s);
 
 class ed_Button {
 public:
@@ -102,7 +128,7 @@ public:
 	void scale(int windowWidth, int windowHeight)
 	{
 		auto scaledRelativePosition = [](int p1, int m1, int m2) {
-			double relativePosition = 1.0 * p1 / m1;
+			int relativePosition = round(1.0 * p1 / m1);
 
 			return relativePosition * m2;
 		};
@@ -173,6 +199,46 @@ public:
 	int getDeltaWorldY()
 	{
 		return this->deltaWorldY;
+	}
+
+	int getRX()
+	{
+		return renderGroups[sheetIndex][textureIndex].x;
+	}
+
+	int getRY()
+	{
+		return renderGroups[sheetIndex][textureIndex].y;
+	}
+
+	int getX1()
+	{
+		return getCollisionBox().x1;
+	}
+
+	int getY1()
+	{
+		return getCollisionBox().y1;
+	}
+
+	int getX2()
+	{
+		return getCollisionBox().x2;
+	}
+
+	int getY2() 
+	{
+		return getCollisionBox().y2;
+	}
+
+	int getCX()
+	{
+		return getCollisionBox().centerX;
+	} 
+
+	int getCY()
+	{
+		return getCollisionBox().centerY;
 	}
 
 	void setPos(int x, int y) {
@@ -260,7 +326,6 @@ public:
 			yWay = -1;
 		} 
 
-		//test
 		for (size_t i = 0; i < collisionGroups.size(); i++) {
 			for (size_t j = 0; j < collisionGroups[i].size(); j++) {
 				collisionGroups[i][j].x1 += getDeltaWorldX() * xWay;
@@ -272,17 +337,6 @@ public:
 				collisionGroups[i][j].centerY += getDeltaWorldX() * yWay;
 			}
 		}
-
-		//end test
-
-		//origingal code
-		/*collisionGroups[getSheetIndex()][getTextureIndex()].x1 += getDeltaWorldX() * xWay;
-		collisionGroups[getSheetIndex()][getTextureIndex()].x2 += getDeltaWorldX() * xWay;
-		collisionGroups[getSheetIndex()][getTextureIndex()].centerX += getDeltaWorldX() * xWay;
-
-		collisionGroups[getSheetIndex()][getTextureIndex()].y1 += getDeltaWorldX() * yWay;
-		collisionGroups[getSheetIndex()][getTextureIndex()].y2 += getDeltaWorldX() * yWay;
-		collisionGroups[getSheetIndex()][getTextureIndex()].centerY += getDeltaWorldX() * yWay;*/
 	}
 
 	void camMove(ed_Dir xDir, ed_Dir yDir)
@@ -308,12 +362,6 @@ public:
 				renderGroups[i][j].y += getDeltaCamX() * yWay;
 			}
 		}
-
-		//end test
-
-		//original code
-		/*renderGroups[getSheetIndex()][getTextureIndex()].x += getDeltaCamX() * xWay;
-		renderGroups[getSheetIndex()][getTextureIndex()].y += getDeltaCamX() * yWay;*/
 	}
 
 	bool falling = false;
@@ -327,11 +375,27 @@ public:
 	Uint32 ID = 0;
 };
 
-class ed_Player : public ed_RenderObject {
+class ed_AnimateObject : public ed_RenderObject {
+protected:
+	virtual int typeIndex() = 0; //where type base object is stored in renderObject pointer group
+public:
+	bool traveling = false;
+
+	bool moving = false;
+
+	int getTypeIndex()
+	{
+		return typeIndex();
+	}
+};
+
+class ed_Player : public ed_AnimateObject {
+protected:
+	int typeIndex() override {
+		return PLAYER_TYPE;
+	}
 public:
 	virtual void jump();
-
-	bool jumping = false;
 
 	int health = 0;
 };

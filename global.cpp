@@ -11,3 +11,4 @@ SDL_Event ed_input;
 const Uint8* ed_keyState = SDL_GetKeyboardState(NULL);
 
 std::vector<std::thread> ed_runningThreads;
+
